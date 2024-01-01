@@ -1,5 +1,7 @@
 import pygame
 import random
+from pygame.locals import *
+import sys
 from noise import snoise2
 import numpy as np
 import cv2
@@ -14,15 +16,34 @@ river_threshold = -0.2  # 用于分类河流的阈值
 land_threshold = 0.0  # 用于分类陆地的阈值
 mountain_threshold = 0.2  # 用于分类高山的阈值
 
-
 cell_map = [[0 for y in range(width)] for x in range(height)]  # 地形
 map_color = [[0 for y in range(width)] for x in range(height)]  # 地形颜色
-
 
 river = 0
 land = 1
 mountain = 2
 change = 4
+
+
+class Player:
+    def __init__(self):
+        # self.position = [random.randint(0, 600), random.randint(0, 600)]
+        self.position = [300, 400]
+        self.speed = 5
+        self.pic = pygame.image.load("picture\player.png")
+
+    def move(self, keyup):
+        #  如果有主角形象，后续将会进行面朝不同方向
+        kp = pygame.key.get_pressed()
+        if 0 <= self.position[0] <= height and self.position[1] >=0 and self.position[1] <= width:
+            if kp[pygame.K_a]:
+                self.position[0] = self.position[0] - self.speed
+            if kp[pygame.K_d]:
+                self.position[0] = self.position[0] + self.speed
+            if kp[pygame.K_s]:
+                self.position[1] = self.position[1] + self.speed
+            if kp[pygame.K_w]:
+                self.position[1] = self.position[1] - self.speed
 
 
 def generate_noise_map(map_width, map_height, scale, octaves, persistence, lacunarity, seed):
@@ -36,10 +57,6 @@ def generate_noise_map(map_width, map_height, scale, octaves, persistence, lacun
             noise_map[x][y] = value
 
     return noise_map
-
-
-def interpolate(a, b, t):
-    return a * (1 - t) + b * t
 
 
 def delete_small(cellmap, mapcolor):
@@ -94,7 +111,6 @@ def render_map(noise_map):
                 cell_map[x][y] = river
                 map_color[x][y] = color
             elif value < land_threshold:
-
                 color = (255, 255, 255)  # White for land
                 cell_map[x][y] = land
                 map_color[x][y] = color
@@ -112,12 +128,7 @@ def render_map(noise_map):
     delete_small(cell_map, map_color)
 
     map_color_bgr = np.array(map_color, dtype=np.uint8)[:, :, ::-1]
-    cv2.imwrite("map.jpg", map_color_bgr)
-
-# def map(screen, map):
-#     for x in range(len(map)):
-#         for y in range(len(map[0])):
-#             pygame.draw.rect(screen, map_color[x][y], (x, y, 1, 1))
+    cv2.imwrite("picture\map.jpg", map_color_bgr)
 
 
 def main():
@@ -131,22 +142,34 @@ def main():
 
     noise_map = generate_noise_map(width, height, scale, octaves, persistence, lacunarity, seed)
     render_map(noise_map)
-    map = pygame.image.load("map.jpg")
+    map = pygame.image.load("picture\map.jpg")
+
+    player = Player()
+    keydown = ""
+    keyup = ""
 
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # 检测左键点击
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
+            # elif event.type == pygame.MOUSEBUTTONDOWN:
+            #     if event.button == 1:  # 检测左键点击
+            #         mouse_x, mouse_y = pygame.mouse.get_pos()
+            #         print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
+            if event.type == KEYDOWN:
+                keydown = event.key
+            else:
+                keydown = None
+            if event.type == KEYUP:
+                keyup = event.key
+            else:
+                keyup = None
+        player.move(keyup)
 
-        screen.fill((0, 0, 0))
+        # screen.fill((0, 0, 0))
         screen.blit(map, (0, 0))
-        # map(screen, noise_map)
-
+        screen.blit(player.pic, (player.position[0], player.position[1]))
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
@@ -154,4 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
