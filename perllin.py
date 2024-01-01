@@ -31,19 +31,43 @@ class Player:
         self.position = [300, 400]
         self.speed = 5
         self.pic = pygame.image.load("picture\player.png")
+        self.rect = self.pic.get_rect()
+        self.left_available = True
+        self.right_available = True
+        self.top_available = True
+        self.down_available = True
 
     def move(self, keyup):
         #  如果有主角形象，后续将会进行面朝不同方向
         kp = pygame.key.get_pressed()
-        if 0 <= self.position[0] <= height and self.position[1] >=0 and self.position[1] <= width:
-            if kp[pygame.K_a]:
-                self.position[0] = self.position[0] - self.speed
-            if kp[pygame.K_d]:
-                self.position[0] = self.position[0] + self.speed
-            if kp[pygame.K_s]:
-                self.position[1] = self.position[1] + self.speed
-            if kp[pygame.K_w]:
-                self.position[1] = self.position[1] - self.speed
+        # print(self.rect)
+        # print(self.position)
+
+        if kp[pygame.K_a] and self.left_available:
+            self.position[0] = self.position[0] - self.speed
+        if kp[pygame.K_d] and self.right_available:
+            self.position[0] = self.position[0] + self.speed
+        if kp[pygame.K_s] and self.down_available:
+            self.position[1] = self.position[1] + self.speed
+        if kp[pygame.K_w] and self.top_available:
+            self.position[1] = self.position[1] - self.speed
+        if self.position[1] <= 0:  # top
+            self.top_available = False
+        else:
+            self.top_available = True
+        if self.position[1] + self.rect.bottom >= height:  # bottom
+            self.down_available = False
+        else:
+            self.down_available = True
+        if self.position[0] <= 0:  # left
+            self.left_available = False
+        else:
+            self.left_available = True
+        if self.position[0] + self.rect.right >= width:  # Right
+            self.right_available = False
+        else:
+            self.right_available = True
+    
 
 
 def generate_noise_map(map_width, map_height, scale, octaves, persistence, lacunarity, seed):
@@ -166,10 +190,14 @@ def main():
             else:
                 keyup = None
         player.move(keyup)
-
+        # player_rect = player.pic.get_rect()
+        # print(player_rect)
         # screen.fill((0, 0, 0))
         screen.blit(map, (0, 0))
         screen.blit(player.pic, (player.position[0], player.position[1]))
+
+        # screen.blit(pygame.transform.smoothscale(player.pic, (int(player_rect[2]), int(player_rect[3]))),
+        #             (player.position[0], player.position[1]))
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
