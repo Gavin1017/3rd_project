@@ -5,6 +5,7 @@ import sys
 from noise import snoise2
 import numpy as np
 import cv2
+import math
 
 pygame.init()
 width, height = 800, 600
@@ -20,15 +21,19 @@ class Player:
         self.height = the_height
         self.position = [300, 400]
         self.speed = 5
-        self.pic = pygame.image.load("picture\player.png")
+        self.pic = pygame.image.load("picture\\player.png")
+        # self.pic = ""
         self.rect = self.pic.get_rect()
         self.left_available = True
         self.right_available = True
         self.top_available = True
         self.down_available = True
+        self.left_pic = pygame.image.load("picture\\left.png")
+        self.right_pic = pygame.image.load("picture\\right.png")
+        self.top_pic = pygame.image.load("picture\\top.png")
+        self.down_pic = pygame.image.load("picture\\down.png")
 
     def move(self, keyup):
-        #  如果有主角形象，后续将会进行面朝不同方向
         kp = pygame.key.get_pressed()
         # print(self.rect)
         # print(self.position)
@@ -41,22 +46,39 @@ class Player:
             self.position[1] = self.position[1] + self.speed
         if kp[pygame.K_w] and self.top_available:
             self.position[1] = self.position[1] - self.speed
-        if self.position[1] <= 0:  # top
+
+        if self.position[1]-self.rect.bottom/2 <= 0:  # top
             self.top_available = False
         else:
             self.top_available = True
-        if self.position[1] + self.rect.bottom >= self.height:  # bottom
+        if self.position[1] + self.rect.bottom/2 >= self.height:  # down
             self.down_available = False
         else:
             self.down_available = True
-        if self.position[0] <= 0:  # left
+        if self.position[0] - self.rect.right/2 <= 0:  # left
             self.left_available = False
         else:
             self.left_available = True
-        if self.position[0] + self.rect.right >= self.width:  # Right
+        if self.position[0] + self.rect.right/2 >= self.width:  # Right
             self.right_available = False
         else:
             self.right_available = True
+
+    def shooting_direction(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        shoot_direction = math.atan2(mouse_y - self.position[1], mouse_x - self.position[0])
+        if -(math.pi/4) <= shoot_direction <= (math.pi/4):
+            self.pic = self.right_pic
+            self.rect = self.pic.get_rect()
+        if (math.pi/4) <= shoot_direction <= (3*math.pi/4):
+            self.pic = self.down_pic
+            self.rect = self.pic.get_rect()
+        if (3*math.pi/4) <= shoot_direction <= math.pi or -math.pi <= shoot_direction <= -(3*math.pi/4):
+            self.pic = self.left_pic
+            self.rect = self.pic.get_rect()
+        if -(3*math.pi/4) <= shoot_direction <= -(math.pi/4):
+            self.pic = self.top_pic
+            self.rect = self.pic.get_rect()
 
 
 class Map:
@@ -204,11 +226,14 @@ def main():
             else:
                 keyup = None
         player.move(keyup)
+        player.shooting_direction()
         # player_rect = player.pic.get_rect()
         # print(player_rect)
         # screen.fill((0, 0, 0))
         screen.blit(map, (0, 0))
-        screen.blit(player.pic, (player.position[0], player.position[1]))
+
+
+        screen.blit(player.pic, (player.position[0]-player.rect.right/2, player.position[1]-player.rect.bottom/2))
 
         # screen.blit(pygame.transform.smoothscale(player.pic, (int(player_rect[2]), int(player_rect[3]))),
         #             (player.position[0], player.position[1]))
