@@ -70,6 +70,22 @@ class Player:
         else:
             self.right_available = True
 
+        # if self.check_collision(the_enemy):
+        #     if self.position[0] + self.rect.right >= the_enemy.x:
+        #         self.right_available = False
+        #     if self.position[0] <= the_enemy.x + the_enemy.rect.right:
+        #         self.left_available = False
+        #     if self.position[1] + self.rect.bottom >= the_enemy.y:
+        #         self.down_available = False
+        #     if self.position[1] <= the_enemy.y + the_enemy.rect.bottom:
+        #         self.top_available = False
+
+            # print("碰撞")
+
+
+
+
+
     def shooting_direction(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         self.shoot_direction = math.atan2(mouse_y - self.position[1], mouse_x - self.position[0])
@@ -91,6 +107,13 @@ class Player:
         for equipment in self.equipments:
             self.attack += equipment.attack
             self.defense += equipment.defense
+
+    # def check_collision(self, the_enemy):
+    #     enemy_rect = pygame.Rect(the_enemy.x - the_enemy.rect.right / 2, the_enemy.y - the_enemy.rect.bottom / 2,
+    #                              the_enemy.rect.right,the_enemy.rect.bottom)
+    #     player_rect = pygame.Rect(self.position[0] - self.rect.right / 2, self.position[1] - self.rect.bottom / 2,
+    #                               self.rect.right,self.rect.bottom)
+    #     return player_rect.colliderect(enemy_rect)
 
 
 class Bullet:
@@ -128,7 +151,7 @@ class Enemy:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.size = 20
+        # self.size = 20
         self.health = 100  # 假设敌人有100点生命值
         self.defence = 2
         self.attack = 10
@@ -136,21 +159,28 @@ class Enemy:
         self.rect = self.pic.get_rect()
 
     def hit(self, damaged):
-        self.health -= damaged-self.defence  # 每次被击中减少10点生命值
+        self.health -= damaged - self.defence  # 每次被击中减少10点生命值
         if self.health <= 0:
             return True  # 如果生命值归零，返回True
         return False
 
-    def draw(self, screen1):
-        pygame.draw.rect(screen1, (0, 166, 255), (self.x, self.y, self.size, self.size))
-
+    # def draw(self, screen1):
+    #     pygame.draw.rect(screen1, (0, 166, 255), (self.x, self.y, self.size, self.size))
 
     def check_collision(self, bullet):
         # 简单的矩形碰撞检测
-        if self.x < bullet.x < self.x + self.size and self.y < bullet.y < self.y + self.size:
-            return True
-        return False
+        # if self.x < bullet.x < self.x + self.size and self.y < bullet.y < self.y + self.size:
+        #     return True
+        # return False
+        nearest_x = max(self.x - self.rect.right / 2, min(bullet.x, self.x + self.rect.right / 2))
+        nearest_y = max(self.y - self.rect.bottom / 2, min(bullet.y, self.y + self.rect.bottom / 2))
 
+        # 计算这个点到圆心的距离
+        distance_x = bullet.x - nearest_x
+        distance_y = bullet.y - nearest_y
+        distance = math.sqrt(distance_x ** 2 + distance_y ** 2)
+
+        return distance < bullet.radius
 
 
 class Map:
@@ -316,7 +346,7 @@ def main():
                 bullet.change_speed(5)  # 增加速度
                 bullet.change_radius(10)  # 增加半径
 
-
+        # 判断玩家移动
         player.move(keyup)
         player.shooting_direction()
 
@@ -334,14 +364,13 @@ def main():
                     if enemy.hit(player.attack):  # 如果敌人被击败
                         enemies.remove(enemy)
 
-
         screen.fill((0, 0, 0))
         screen.blit(map, (0, 0))
         screen.blit(player.pic,
                     (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))
         #
-        # screen.blit(pygame.transform.smoothscale(player.pic, (int(player_rect[2]), int(player_rect[3])) ),
-        #             (player.position[0], player.position[1])) # 放大或者缩小
+        # screen.blit(pygame.transform.smoothscale(player.pic, (int(player.rect[2]), int(player.rect[3]))),
+        #             (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))  # 放大或者缩小
         # 绘制子弹
         for bullet in player_bullets:
             bullet.draw(screen)
@@ -349,8 +378,11 @@ def main():
         for enemy in enemies:
             screen.blit(enemy.pic,
                         (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
+            # screen.blit(pygame.transform.smoothscale(enemy.pic, (int(enemy.rect[2]/3), int(enemy.rect[3]/3))),
+            #             (enemy.x - enemy.rect.right / 2,
+            #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
             # enemy.draw(screen)
-
+        # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
