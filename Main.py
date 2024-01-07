@@ -56,78 +56,82 @@ def main():
     # 特定事件
     special_event_triggered = False
 
+    # 状态机判断当前实在主地图还是分地图。主地图是0，分地图为1，2，3...
+    map_state = 0
+
     running = True
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                exit()
-            # elif event.type == pygame.MOUSEBUTTONDOWN:
-            #     if event.button == 1:  # 检测左键点击
-            #         mouse_x, mouse_y = pygame.mouse.get_pos()
-            #         print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
-            if event.type == KEYDOWN:
-                keydown = event.key
-            else:
-                keydown = None
-            if event.type == KEYUP:
-                keyup = event.key
-            else:
-                keyup = None
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                angle = math.atan2(mouse_y - player.position[1], mouse_x - player.position[0])
-                player_bullets.append(Bullet(player.position[0], player.position[1], angle))
-            # 按下空格键触发特定事件
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                special_event_triggered = True
-        # 如果特定事件被触发，改变所有子弹的属性
-        if special_event_triggered:
-            for bullet in player_bullets:
-                bullet.change_speed(5)  # 增加速度
-                bullet.change_radius(10)  # 增加半径
+        if map_state == 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    exit()
+                # elif event.type == pygame.MOUSEBUTTONDOWN:
+                #     if event.button == 1:  # 检测左键点击
+                #         mouse_x, mouse_y = pygame.mouse.get_pos()
+                #         print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
+                if event.type == KEYDOWN:
+                    keydown = event.key
+                else:
+                    keydown = None
+                if event.type == KEYUP:
+                    keyup = event.key
+                else:
+                    keyup = None
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    angle = math.atan2(mouse_y - player.position[1], mouse_x - player.position[0])
+                    player_bullets.append(Bullet(player.position[0], player.position[1], angle))
+                # 按下空格键触发特定事件
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    special_event_triggered = True
+            # 如果特定事件被触发，改变所有子弹的属性
+            if special_event_triggered:
+                for bullet in player_bullets:
+                    bullet.change_speed(5)  # 增加速度
+                    bullet.change_radius(10)  # 增加半径
 
-        # 判断玩家移动
-        player.move(keyup)
-        player.shooting_direction()
+            # 判断玩家移动
+            player.move(keyup)
+            player.shooting_direction()
 
-        # 更新子弹
-        for bullet in player_bullets[:]:
-            bullet.update()
-            if bullet.is_out_of_range():
-                player_bullets.remove(bullet)
-
-        # 检测敌人和子弹的碰撞
-        for bullet in player_bullets[:]:
-            for enemy in enemies[:]:
-                if enemy.check_collision(bullet):
+            # 更新子弹
+            for bullet in player_bullets[:]:
+                bullet.update()
+                if bullet.is_out_of_range():
                     player_bullets.remove(bullet)
-                    if enemy.hit(player.attack):  # 如果敌人被击败
-                        enemies.remove(enemy)
 
-        main_surface.fill((0, 0, 0))
-        main_surface.blit(map, (0, 0))
-        main_surface.blit(player.pic,
-                          (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))
-        #
-        # main_surface.blit(pygame.transform.smoothscale(player.pic, (int(player.rect[2]), int(player.rect[3]))),
-        #             (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))  # 放大或者缩小
-        # 绘制子弹
-        for bullet in player_bullets:
-            bullet.draw(main_surface)
-        # 绘制敌人
-        for enemy in enemies:
-            main_surface.blit(enemy.pic,
-                              (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
-            # main_surface.blit(pygame.transform.smoothscale(enemy.pic, (int(enemy.rect[2]/3), int(enemy.rect[3]/3))),
-            #             (enemy.x - enemy.rect.right / 2,
-            #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
-            # enemy.draw(main_surface)
-        # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
-        screen.blit(main_surface, (0, 0))
-        pygame.display.flip()
-        clock.tick(60)
+            # 检测敌人和子弹的碰撞
+            for bullet in player_bullets[:]:
+                for enemy in enemies[:]:
+                    if enemy.check_collision(bullet):
+                        player_bullets.remove(bullet)
+                        if enemy.hit(player.attack):  # 如果敌人被击败
+                            enemies.remove(enemy)
+
+            main_surface.fill((0, 0, 0))
+            main_surface.blit(map, (0, 0))
+            main_surface.blit(player.pic,
+                              (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))
+            #
+            # main_surface.blit(pygame.transform.smoothscale(player.pic, (int(player.rect[2]), int(player.rect[3]))),
+            #             (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))  # 放大或者缩小
+            # 绘制子弹
+            for bullet in player_bullets:
+                bullet.draw(main_surface)
+            # 绘制敌人
+            for enemy in enemies:
+                main_surface.blit(enemy.pic,
+                                  (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
+                # main_surface.blit(pygame.transform.smoothscale(enemy.pic, (int(enemy.rect[2]/3), int(enemy.rect[3]/3))),
+                #             (enemy.x - enemy.rect.right / 2,
+                #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
+                # enemy.draw(main_surface)
+            # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
+            screen.blit(main_surface, (0, 0))
+            pygame.display.flip()
+            clock.tick(60)
 
     # exit()
 
