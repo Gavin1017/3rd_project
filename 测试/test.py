@@ -1,80 +1,81 @@
-import random
 import pygame
-import noise
 
-WIDTH = 1000
-HEIGHT = 600
-screen = pygame.display.set_mode((WIDTH,HEIGHT))
+# 初始化pygame
+pygame.init()
 
-def generate_noise(count):
+# 设置窗口
+width, height = 800, 600
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("迷宫游戏")
 
-    noise = list()
-    for i in range(count):
-        noise.append(random.random())
-    return noise
+# 迷宫数组
+maze= [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1], [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1], [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1], [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1], [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1], [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
-def draw_line(pos1,pos2):
-    # draw a single line from pos1 to pos2
+# maze = [
+#     # 这里应该放你的迷宫数组
+# ]
 
-    pygame.draw.line(screen,(255,0,0),pos1,pos2,1)
+# 定义颜色
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)  # 玩家颜色
 
-heights = [random.randint(0,100) for i in range(11)]
-gradients = [random.randint(0,255) for i in range(11)]
+# 玩家初始位置
+player_pos = [1, 1]
+block_size = 25  # 假设每个迷宫单元格的大小为20像素
 
-def lerp(y1,y2,w):
+# 绘制迷宫函数
+def draw_maze():
+    for y, row in enumerate(maze):
+        for x, cell in enumerate(row):
+            rect = pygame.Rect(x*block_size, y*block_size, block_size, block_size)
+            if cell == 1:  # 墙壁
+                pygame.draw.rect(screen, BLACK, rect)
+            else:  # 通路
+                pygame.draw.rect(screen, WHITE, rect)
 
-    return y1 + (y2 - y1) * w
+# 绘制玩家
+def draw_player():
+    rect = pygame.Rect(player_pos[0]*block_size, player_pos[1]*block_size, block_size, block_size)
+    pygame.draw.rect(screen, RED, rect)
 
-def twist(x):
-    # 3t^2 - 2t^3
+# 更新玩家位置
+def move_player(direction):
+    x, y = player_pos
+    if direction == 'UP' and maze[y-1][x] == 0:
+        player_pos[1] -= 1
+    elif direction == 'DOWN' and maze[y+1][x] == 0:
+        player_pos[1] += 1
+    elif direction == 'LEFT' and maze[y][x-1] == 0:
+        player_pos[0] -= 1
+    elif direction == 'RIGHT' and maze[y][x+1] == 0:
+        player_pos[0] += 1
 
-    return x**2 * (3 - 2 * x)
+# 主游戏循环
+running = True
+while running:
+    print(1)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                move_player('UP')
+            elif event.key == pygame.K_DOWN:
+                move_player('DOWN')
+            elif event.key == pygame.K_LEFT:
+                move_player('LEFT')
+            elif event.key == pygame.K_RIGHT:
+                move_player('RIGHT')
 
+    # 绘制迷宫和玩家
+    draw_maze()
+    draw_player()
 
-def twist2(x):
-    # 3t^2 - 2t^3
+    # 更新屏幕
+    pygame.display.flip()
 
-    return x**3 * (6 * x**2 - 15 * x + 10)
-
-def get_noise():
-
-    noise = list()
-    pos = list()
-    for idx in range(10):
-        # print(idx)
-        for _x in range(100):
-            x = _x/100
-            y1 = gradients[idx] * x + heights[idx]
-            y2 = gradients[idx + 1] * (x - 1) + heights[idx+1]
-            w = twist2(x)
-            noise.append(lerp(y1,y2,w))
-            pos.append(idx * 100 + _x)
-    return noise,pos
-
-
-noise,pos = get_noise()
-
-print(noise)
-print(pos)
-
-def update():
-    # 绘制所有的点
-
-    for idx in range(len(noise)):
-        screen.set_at((pos[idx],int(noise[idx]) + 200),(255,0,0))
-
-def main_loop():
-
-    while 1:
-        screen.fill((255,255,255))
-        update()
-        pygame.display.flip()
-        for evt in pygame.event.get():
-            if evt.type == pygame.QUIT:
-                pygame.quit()
-                exit(0)
-
-
-main_loop()
+# 退出游戏
+pygame.quit()
 
 

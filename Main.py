@@ -10,6 +10,7 @@ from Player import *
 from Bullet import *
 from Enemy import *
 from Map import *
+import Map_Maze
 
 pygame.init()
 width, height = 800, 600
@@ -21,6 +22,7 @@ init_surface = pygame.Surface(screen.get_size())
 init_surface.fill((255, 255, 255))
 main_surface = pygame.Surface(screen.get_size())
 
+maze_surface = pygame.Surface(screen.get_size())
 # init_surface.fill((255,255,255))
 
 
@@ -59,8 +61,12 @@ def main():
     # 状态机判断当前实在主地图还是分地图。主地图是0，分地图为1，2，3...
     map_state = 0
 
+    # 声明地图迷宫
+    map_maze = ""
+
     running = True
     while running:
+
         if map_state == 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -85,12 +91,18 @@ def main():
                     player_bullets.append(Bullet(player.position[0], player.position[1], angle))
                 # 按下空格键触发特定事件
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    special_event_triggered = True
+                    map_state = 1
+                    maze_width = 25
+                    maze_height = 25
+                    map_maze = Map_Maze.Map(maze_width, maze_height, maze_surface)
+                    Map_Maze.doRandomPrim(map_maze)
+
+                    # special_event_triggered = True
             # 如果特定事件被触发，改变所有子弹的属性
-            if special_event_triggered:
-                for bullet in player_bullets:
-                    bullet.change_speed(5)  # 增加速度
-                    bullet.change_radius(10)  # 增加半径
+            # if special_event_triggered:
+            #     for bullet in player_bullets:
+            #         bullet.change_speed(5)  # 增加速度
+            #         bullet.change_radius(10)  # 增加半径
 
             # 判断玩家移动
             player.move(keyup)
@@ -132,6 +144,36 @@ def main():
             screen.blit(main_surface, (0, 0))
             pygame.display.flip()
             clock.tick(60)
+        elif map_state == 1:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        map_maze.move_player('UP')
+                    elif event.key == pygame.K_DOWN:
+                        map_maze.move_player('DOWN')
+                    elif event.key == pygame.K_LEFT:
+                        map_maze.move_player('LEFT')
+                    elif event.key == pygame.K_RIGHT:
+                        map_maze.move_player('RIGHT')
+            # 绘制迷宫和玩家
+            map_maze.draw_maze()
+            map_maze.draw_player()
+
+            # 更新屏幕
+            screen.blit(maze_surface, (0, 0))
+            pygame.display.flip()
+            clock.tick(60)
+
+
+
+
+            # map_maze.showMap()
+
+
 
     # exit()
 
