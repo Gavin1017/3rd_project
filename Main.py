@@ -23,6 +23,10 @@ init_surface.fill((255, 255, 255))
 main_surface = pygame.Surface(screen.get_size())
 
 maze_surface = pygame.Surface(screen.get_size())
+maze_lines = []
+
+
+
 # init_surface.fill((255,255,255))
 
 
@@ -90,14 +94,14 @@ def main():
                     angle = math.atan2(mouse_y - player.position[1], mouse_x - player.position[0])
                     player_bullets.append(Bullet(player.position[0], player.position[1], angle))
                 # 按下空格键触发特定事件
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    map_state = 1
-                    maze_width = 25
-                    maze_height = 25
-                    map_maze = Map_Maze.Map(maze_width, maze_height, maze_surface)
-                    Map_Maze.doRandomPrim(map_maze)
+                # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                #     map_state = 1
+                #     maze_width = 25
+                #     maze_height = 25
+                #     map_maze = Map_Maze.Map(maze_width, maze_height, maze_surface)
+                #     Map_Maze.doRandomPrim(map_maze)
 
-                    # special_event_triggered = True
+                # special_event_triggered = True
             # 如果特定事件被触发，改变所有子弹的属性
             # if special_event_triggered:
             #     for bullet in player_bullets:
@@ -119,8 +123,50 @@ def main():
                 for enemy in enemies[:]:
                     if enemy.check_collision(bullet):
                         player_bullets.remove(bullet)
-                        if enemy.hit(player.attack):  # 如果敌人被击败
-                            enemies.remove(enemy)
+                        # map_state = random.randint(1,3)  # 需要切换random(后面请改成random.randint(1,3))
+                        map_state = 1
+                        if map_state == 1:
+
+                            maze_width = 25
+                            maze_height = 25
+                            map_maze = Map_Maze.Map(maze_width, maze_height, maze_surface, enemy)
+                            Map_Maze.doRandomPrim(map_maze)
+                            map_maze.picture_scale()
+                            map_maze.zero_pos()
+                            #  绘制字体
+                            font = pygame.font.SysFont(None, 28)
+
+                            # 想要显示的文本
+                            full_text = 'The victory condition for this maze is to navigate from the starting point ' \
+                                        'in the upper left corner to the destination in the lower right corner. You ' \
+                                        'need to find three keys at different locations within the maze for the final ' \
+                                        'exit to appear. The entire maze has a time limit; you must complete it ' \
+                                        'within one minute. However, each time you obtain a key, an additional ten ' \
+                                        'seconds will be added to the clock. Good Luck Have Fun.'
+
+                            # 设置每行的最大像素宽度
+                            max_line_width = 250
+                            # 分割文本到多行
+                            words = full_text.split(' ')
+                            maze_lines.clear()
+                            current_line = ''
+
+                            # 标题
+                            maze_lines.append("            Map Maze")
+
+                            for word in words:
+                                # 如果加上新单词后超过了最大宽度，则当前行结束，开始新行
+                                if font.size(current_line + word)[0] > max_line_width:
+                                    maze_lines.append(current_line.strip())
+                                    current_line = word + ' '
+                                else:
+                                    current_line += word + ' '
+                            maze_lines.append(current_line.strip())  # 添加最后一行
+                        # elif map_state == 2:
+
+
+                    # if enemy.hit(player.attack):  # 如果敌人被击败
+                    #     enemies.remove(enemy)
 
             main_surface.fill((0, 0, 0))
             main_surface.blit(map, (0, 0))
@@ -141,41 +187,80 @@ def main():
                 #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
                 # enemy.draw(main_surface)
             # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
+            # print(player.hp)
+            if player.hp <= 0: # 判断血条来跳出是否结束或这重启（未完成）
+                running = False
+
             screen.blit(main_surface, (0, 0))
             pygame.display.flip()
             clock.tick(60)
         elif map_state == 1:
+            maze_surface.fill((0,0,0))
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     pygame.quit()
                     exit()
+                # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE: # 返回到主页面
+                #     map_state = 0
+
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
+                    if event.key == pygame.K_w:
                         map_maze.move_player('UP')
-                    elif event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_s:
                         map_maze.move_player('DOWN')
-                    elif event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_a:
                         map_maze.move_player('LEFT')
-                    elif event.key == pygame.K_RIGHT:
+                    elif event.key == pygame.K_d:
                         map_maze.move_player('RIGHT')
+
+            fontline = pygame.font.SysFont(None, 28)
+            y = 10  # 初始y坐标
+            # 设置每行的最大像素宽度
+            max_line_width = 250
+
+            for line in maze_lines:
+                title_surface = fontline.render(line, True, (255, 255, 255))
+                title_rect = title_surface.get_rect(x=maze_surface.get_width() - max_line_width - 10,
+                                                    y=y)
+                maze_surface.blit(title_surface, title_rect)
+                y += title_rect.height  # 更新y坐标，为下一行腾出空间
+
             # 绘制迷宫和玩家
             map_maze.draw_maze()
             map_maze.draw_player()
+            finish = map_maze.check_finish()
+
+            if finish:
+                map_state = 0
+                enemies.remove(map_maze.enemy)
+
+            map_maze.time -= 1 / 60
+            # map_maze.time = int(map_maze.time)
+            # print(int(map_maze.time))
+            if int(map_maze.time) <= 0:
+                player.hp -= 100
+                map_state = 0
+
+            time_str = '{:02d}'.format(int(map_maze.time)) + "s"
+            font = pygame.font.SysFont(None, 48)
+            text = font.render(time_str, True, (255, 255, 255))
+
+            text_rect = text.get_rect(x=600, y=500)
+            maze_surface.blit(text, text_rect)
+
+
 
             # 更新屏幕
             screen.blit(maze_surface, (0, 0))
             pygame.display.flip()
             clock.tick(60)
 
-
-
-
             # map_maze.showMap()
 
+    main() #重启游戏
 
-
-    # exit()
 
 
 def init():

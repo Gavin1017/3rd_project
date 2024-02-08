@@ -7,6 +7,8 @@
 副业面为多种类型，类似于吃豆人，迷宫，对战。
 
 
+
+
 迷宫
 随机地方出现怪物
 
@@ -14,3 +16,15 @@
 额外写一个判断
 
 Main.py为前端
+
+prim algorithm
+
+
+follow the track
+copy right about using picture from the chatgpt.
+
+AI agent policy
+
+2024/2/8
+state2用地牢生成，
+地图放大，视角只有地图的一部分，根据上下移动，来变化地图位置
