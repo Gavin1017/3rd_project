@@ -173,7 +173,7 @@ def doRandomPrim(map):
 #     HEIGHT = 25
 #     map = Map(WIDTH, HEIGHT)
 #     doRandomPrim(map)
-#     # map.showMap()
+#     map.showMap()
 #     print(map.map)
 #
 # run()

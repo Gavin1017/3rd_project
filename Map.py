@@ -106,4 +106,5 @@ class Map:
         self.delete_small(self.cell_map, self.map_color)
 
         map_color_bgr = np.array(self.map_color, dtype=np.uint8)[:, :, ::-1]
+
         cv2.imwrite("picture\map.jpg", map_color_bgr)

@@ -48,10 +48,53 @@ def rule(grid,c,t):
 # 例如，使用元胞自动机的洞穴生成规则
 cave_map = cpl.evolve2d(cellular_automaton, timesteps=5, apply_rule=lambda n, c, t: rule(n, c, t))
 
-# cave_map = np.repeat(cave_map, 10, axis=1)
-#
-# cave_map = np.repeat(cave_map, 10, axis=2)
-print(cave_map.shape)
+def flood_fill(matrix, x, y, threshold):
+    # 获取原始值以便我们知道需要填充哪些区域
+    original_value = matrix[x, y]
+    has_judged = []
+    # 初始化区域大小和一个栈来存储所有需要访问的像素
+    area_size = 0
+    stack = [(x, y)]
+    height, row = matrix.shape
+    # 当栈不为空时处理所有相邻像素
+    while stack:
+        # print("judged:", has_judged)
+        # print("the stack:", stack)
+        # print("-------------")
+        x, y = stack.pop()
+        if matrix[x, y] == original_value:
+            has_judged.append((x, y))
+            area_size += 1
+            # 将所有相邻像素添加到栈中
+            if x - 1 >= 0 and ((x - 1, y) not in has_judged) and matrix[x - 1][y] == original_value and (
+                    (x - 1, y) not in stack):
+                stack.append((x - 1, y))
+            if x + 1 <= height - 1 and ((x + 1, y) not in has_judged) and matrix[x + 1][y] == original_value and (
+                    (x + 1, y) not in stack):
+                stack.append((x + 1, y))
+            if y - 1 >= 0 and ((x, y - 1) not in has_judged) and matrix[x][y - 1] == original_value and (
+                    (x, y - 1) not in stack):
+                stack.append((x, y - 1))
+            if y + 1 <= row - 1 and ((x, y + 1) not in has_judged) and matrix[x][y + 1] == original_value and (
+                    (x, y + 1) not in stack):
+                stack.append((x, y + 1))
+    if area_size <= threshold:
+        for r in has_judged:
+            matrix[r[0],r[1]] = 1 - original_value
+
+    return matrix, has_judged
+
+final_matrix = cave_map[-1].copy()
+all_judged = []
+the_threshold = 5
+for x in range(cave_map[-1].shape[0]):
+    for y in range(cave_map[-1].shape[1]):
+        if (x, y) not in all_judged:
+            final_matrix, judged = flood_fill(final_matrix, x, y, the_threshold)
+            all_judged = all_judged + judged
+
+cave_map = final_matrix
+
 
 # print(type(cave_map))
 # 游戏主循环
@@ -67,7 +110,7 @@ while running:
     # 渲染细胞自动机生成的洞穴地图
     for row in range(rows):
         for col in range(cols):
-            color = (255, 255, 255) if cave_map[-1][col, row] == 0 else (0, 0, 0)
+            color = (255, 255, 255) if cave_map[col, row] == 0 else (0, 0, 0)
             pygame.draw.rect(screen, color, (col*cell_size, row*cell_size, cell_size, cell_size))
 
     # 更新屏幕显示
