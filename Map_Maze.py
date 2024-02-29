@@ -20,6 +20,12 @@ class Map:
         self.enemy = enemy
         self.time = 60
 
+        self.player_pic = pygame.image.load("picture\\player_down.png")
+        self.player_down = pygame.image.load("picture\\player_down.png")
+        self.player_top = pygame.image.load("picture\\player_top.png")
+        self.player_left = pygame.image.load("picture\\player_left.png")
+        self.player_right = pygame.image.load("picture\\player_right.png")
+
     def resetMap(self, value):
         for y in range(self.height):
             for x in range(self.width):
@@ -69,14 +75,12 @@ class Map:
                     pygame.draw.rect(self.surface, (255, 255, 255), rect)
 
         for i in self.selected_positions:  # 吃掉钥匙
-
             if self.player_pos[0] == i[0] and self.player_pos[1] == i[1]:
                 self.selected_positions.remove(i)
                 self.time += 10
-            self.surface.blit(self.picture, (i[0]* self.block_size, i[1]* self.block_size))
+            self.surface.blit(self.picture, (i[0] * self.block_size, i[1] * self.block_size))
         if len(self.selected_positions) == 0:  # 当三把钥匙都吃掉，生成最后一把钥匙（出口）
             self.surface.blit(self.picture, ((self.width-2) * self.block_size, (self.width-2) * self.block_size))
-
 
     def check_finish(self):
         if len(self.selected_positions) == 0 and self.player_pos == [self.width-2,self.width-2]:
@@ -84,23 +88,28 @@ class Map:
         else:
             return False
 
-
     def draw_player(self):
-        rect = pygame.Rect(self.player_pos[0] * self.block_size, self.player_pos[1] * self.block_size, self.block_size,
-                           self.block_size)
-        pygame.draw.rect(self.surface, (255, 0, 0), rect)
+        # rect = pygame.Rect(self.player_pos[0] * self.block_size, self.player_pos[1] * self.block_size, self.block_size,
+        #                    self.block_size)
+        # pygame.draw.rect(self.surface, (255, 0, 0), rect)
+
+        player_pic = pygame.transform.scale(self.player_pic, (self.block_size, self.block_size))
+        self.surface.blit(player_pic, (self.player_pos[0] * self.block_size, self.player_pos[1] * self.block_size))
 
     def move_player(self, direction):
         x, y = self.player_pos
         if direction == 'UP' and self.map[y - 1][x] == 0:
             self.player_pos[1] -= 1
+            self.player_pic = self.player_top
         elif direction == 'DOWN' and self.map[y + 1][x] == 0:
             self.player_pos[1] += 1
+            self.player_pic = self.player_down
         elif direction == 'LEFT' and self.map[y][x - 1] == 0:
             self.player_pos[0] -= 1
+            self.player_pic = self.player_left
         elif direction == 'RIGHT' and self.map[y][x + 1] == 0:
             self.player_pos[0] += 1
-
+            self.player_pic = self.player_right
 
 # find unvisited adjacent entries of four possible entris
 # then add random one of them to checklist and mark it as visited

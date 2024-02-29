@@ -6,14 +6,18 @@ from noise import snoise2
 import numpy as np
 import cv2
 import math
+from scipy.ndimage import label, find_objects
+from skimage.graph import route_through_array
 from Player import *
 from Bullet import *
 from Enemy import *
 from Map import *
 import Map_Maze
-
+import Map_Cave
+import random
 pygame.init()
 width, height = 800, 600
+# width, height = 1000, 800
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("PCG Game")
 clock = pygame.time.Clock()
@@ -25,8 +29,10 @@ main_surface = pygame.Surface(screen.get_size())
 maze_surface = pygame.Surface(screen.get_size())
 maze_lines = []
 
-
-
+cave_surface = pygame.Surface(screen.get_size())
+bomb_list = []
+cave_enemy_list = []
+fire_list = []
 # init_surface.fill((255,255,255))
 
 
@@ -124,7 +130,7 @@ def main():
                     if enemy.check_collision(bullet):
                         player_bullets.remove(bullet)
                         # map_state = random.randint(1,3)  # 需要切换random(后面请改成random.randint(1,3))
-                        map_state = 1
+                        map_state = 2
                         if map_state == 1:
 
                             maze_width = 25
@@ -162,8 +168,30 @@ def main():
                                 else:
                                     current_line += word + ' '
                             maze_lines.append(current_line.strip())  # 添加最后一行
-                        # elif map_state == 2:
+                        elif map_state == 2:
+                            cave_time = 0
+                            cell_size = 15
+                            bomb_list = []
+                            fire_list = []
+                            cave_enemy_list = []
+                            # cols, rows = width // cell_size, height // cell_size  # cols=80, rows = 60
+                            thecave = Map_Cave.Cave(width, height, cell_size, enemy)
+                            thecave.initial()
+                            thecave.cellular_automaton(5)  # step of the cellular automaton
+                            thecave.final_map(10)  # the threshold of the area
+                            thecave.connect_components()
+                            thecave.block()
 
+                            cave_position = Map_Cave.find_init_position(thecave.unconnected_cave)
+                            # print("---------------------")
+                            cave_player = Map_Cave.Player(cave_position[1], thecave.matrix, cell_size, cave_surface, cell_size)
+                            # print(cave_player.position)
+                            enemy_number = random.randint(2,5)
+                            enemy_position_values = list(cave_position.values())[1:]
+                            cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
+                            for enemy_pos in cave_enemy_list_pos:
+                                cave_enemy_list.append(Map_Cave.Enemy(enemy_pos, thecave.matrix, cell_size, cave_surface, cell_size ))
+                            print(cave_enemy_list)
 
                     # if enemy.hit(player.attack):  # 如果敌人被击败
                     #     enemies.remove(enemy)
@@ -189,6 +217,8 @@ def main():
             # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
             # print(player.hp)
             if player.hp <= 0: # 判断血条来跳出是否结束或这重启（未完成）
+                running = False
+            elif len(enemies)<=0:
                 running = False
 
             screen.blit(main_surface, (0, 0))
@@ -240,7 +270,7 @@ def main():
             # map_maze.time = int(map_maze.time)
             # print(int(map_maze.time))
             if int(map_maze.time) <= 0:
-                player.hp -= 100
+                player.hp -= 100  # 如果没有完成，则扣除玩家的hp值
                 map_state = 0
 
             time_str = '{:02d}'.format(int(map_maze.time)) + "s"
@@ -258,6 +288,127 @@ def main():
             clock.tick(60)
 
             # map_maze.showMap()
+        elif map_state == 2:
+            # print(cave_player.position)
+            # print("对应的", thecave.matrix[cave_player.position[0], cave_player.position[1]])
+            # cave_surface.fill((0, 0, 0))
+            # cell_size = 10
+            cols, rows = width // cell_size, height // cell_size  # cols=80, rows = 60
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w:
+                        cave_player.move('UP', bomb_list)
+                        # cave_enemy_list[0].move('UP', bomb_list)
+                    elif event.key == pygame.K_s:
+                        cave_player.move('DOWN', bomb_list)
+                        # cave_enemy_list[0].move('DOWN', bomb_list)
+                    elif event.key == pygame.K_a:
+                        cave_player.move('LEFT', bomb_list)
+                        # cave_enemy_list[0].move('LEFT', bomb_list)
+                    elif event.key == pygame.K_d:
+                        cave_player.move('RIGHT', bomb_list)
+                        # cave_enemy_list[0].move('RIGHT', bomb_list)
+
+                    if event.key == pygame.K_j and cave_player.cd <= 0:
+                        bomb_position = cave_player.position.copy()
+                        bomb_position = (bomb_position[0]*cell_size, bomb_position[1]*cell_size)
+                        bomb_list.append(Map_Cave.Bomb(bomb_position, cave_player, cell_size))
+                        if 0 <= cave_time < 30:
+                            cave_player.cd = 4
+                        elif 30 <= cave_time < 60:
+                            cave_player.cd = 3.5
+                        elif 60 <= cave_time < 120:
+                            cave_player.cd = 3
+                        else:
+                            cave_player.cd = 2.5
+
+            cave_surface.fill((0, 0, 0))
+
+            # 渲染细胞自动机生成的洞穴地图
+            for row in range(rows):
+                for col in range(cols):
+
+                    if thecave.matrix[row][col] == 0:
+                        color = (255, 255, 255)  # 白色
+                    elif thecave.matrix[row][col] == 1:
+                        color = (0, 0, 0)  # 黑色
+                    elif thecave.matrix[row][col] == 2:
+                        color = (165,42,42)
+                    pygame.draw.rect(cave_surface, color, (col * cell_size, row * cell_size, cell_size, cell_size))
+            # screen.blit(cave,(0,0))
+            # update the cave surface
+            cave_player.draw()
+
+            # 判断无敌帧和炸弹cd
+            if cave_player.cd > 0:
+                cave_player.cd -= 1/60
+            if cave_player.invincible_after_injured > 0:
+                cave_player.invincible_after_injured -= 1/60
+            if cave_player.invincible_after_injured > 0:
+                cave_player.invincible_after_injured -= 1/60
+
+            # 绘制敌人
+            for enemy in cave_enemy_list:
+                enemy.draw()
+                if enemy.invincible_after_injured > 0:
+                    enemy.invincible_after_injured -= 1 / 60
+                if enemy.hp <=0:
+                    cave_enemy_list.remove(enemy)
+
+            # 绘制炸弹
+            for bomb in bomb_list:
+                bomb.draw_before_explosion(cave_surface)
+                bomb.remaining_time -= 1/60
+                if bomb.remaining_time <= 0:
+                    bomb_list.remove(bomb)
+                    fire_list.append(bomb)
+                if 0 <= cave_time < 30:  # 如果大于一定时间，炸弹的范围会变大
+                    bomb.range = 1
+                elif 30 <= cave_time < 60:
+                    bomb.range = 2
+                elif 60 <= cave_time < 120:
+                    bomb.range = 3
+                else:
+                    bomb.range = 5
+
+
+            print(cave_time)
+            # 绘制爆炸效果
+            for fire in fire_list:
+                fire.draw_after_explosion(cave_surface)
+                fire.flame_time -= 1/60
+                who_collided, bomb_owner = fire.check_collision(cave_player, cave_enemy_list)
+                thecave.matrix = fire.check_block_collision(thecave.matrix.copy())
+
+                # print("谁被炸了：", len(who_collided))
+                # print("谁的炸弹: ", bomb_owner)
+                if fire.flame_time <= 0:
+                    fire_list.remove(fire)
+
+                for collided in who_collided:
+                    if collided.invincible_after_injured <= 0:
+                        collided.hp -= bomb_owner.attack
+                        collided.invincible_after_injured = 2
+            # 判断玩家和敌人的hp值
+            if cave_player.hp <= 0:
+                map_state = 0
+                player.hp -= 100  # 主界面玩家的hp
+            if len(cave_enemy_list) <= 0:
+                enemies.remove(thecave.enemy)
+                map_state = 0
+
+            cave_time += 1/60
+            cave_player.update_map(thecave.matrix)
+            screen.blit(cave_surface, (0, 0))
+            clock.tick(60)
+            pygame.display.flip()
+
 
     main() #重启游戏
 
