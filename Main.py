@@ -44,7 +44,10 @@ cave_surface = pygame.Surface(screen.get_size())
 bomb_list = []
 cave_enemy_list = []
 fire_list = []
+
+pause_surface = pygame.Surface(screen.get_size())
 # init_surface.fill((255,255,255))
+
 
 
 def main():
@@ -81,6 +84,7 @@ def main():
 
     # 状态机判断当前实在主地图还是分地图。主地图是0，分地图为1，2，3...
     map_state = 0
+    now_state = 0
 
     # 声明地图迷宫
     map_maze = ""
@@ -98,6 +102,11 @@ def main():
                 #     if event.button == 1:  # 检测左键点击
                 #         mouse_x, mouse_y = pygame.mouse.get_pos()
                 #         print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        now_state = map_state
+                        map_state = 3
+
                 if event.type == KEYDOWN:
                     keydown = event.key
                 else:
@@ -126,7 +135,7 @@ def main():
             #         bullet.change_radius(10)  # 增加半径
 
             # 判断玩家移动
-            player.move(keyup)
+            player.move(keyup, key_settings)
             player.shooting_direction()
 
             # 更新子弹
@@ -202,7 +211,7 @@ def main():
                             cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
                             for enemy_pos in cave_enemy_list_pos:
                                 cave_enemy_list.append(Map_Cave.Enemy(enemy_pos, thecave.matrix, cell_size, cave_surface, cell_size ))
-                            print(cave_enemy_list)
+                            # print(cave_enemy_list)
 
                     # if enemy.hit(player.attack):  # 如果敌人被击败
                     #     enemies.remove(enemy)
@@ -243,17 +252,21 @@ def main():
                     running = False
                     pygame.quit()
                     exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        now_state = map_state
+                        map_state = 3
                 # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE: # 返回到主页面
                 #     map_state = 0
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_w:
+                    if event.key == key_settings['up']:
                         map_maze.move_player('UP')
-                    elif event.key == pygame.K_s:
+                    elif event.key == key_settings['down']:
                         map_maze.move_player('DOWN')
-                    elif event.key == pygame.K_a:
+                    elif event.key == key_settings['left']:
                         map_maze.move_player('LEFT')
-                    elif event.key == pygame.K_d:
+                    elif event.key == key_settings['right']:
                         map_maze.move_player('RIGHT')
 
             fontline = pygame.font.SysFont(None, 28)
@@ -311,18 +324,22 @@ def main():
                     running = False
                     pygame.quit()
                     exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        now_state = map_state
+                        map_state = 3
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_w:
+                    if event.key == key_settings['up']:
                         cave_player.move('UP', bomb_list)
                         # cave_enemy_list[0].move('UP', bomb_list)
-                    elif event.key == pygame.K_s:
+                    elif event.key == key_settings['down']:
                         cave_player.move('DOWN', bomb_list)
                         # cave_enemy_list[0].move('DOWN', bomb_list)
-                    elif event.key == pygame.K_a:
+                    elif event.key == key_settings['left']:
                         cave_player.move('LEFT', bomb_list)
                         # cave_enemy_list[0].move('LEFT', bomb_list)
-                    elif event.key == pygame.K_d:
+                    elif event.key == key_settings['right']:
                         cave_player.move('RIGHT', bomb_list)
                         # cave_enemy_list[0].move('RIGHT', bomb_list)
 
@@ -389,7 +406,7 @@ def main():
                     bomb.range = 5
 
 
-            print(cave_time)
+            # print(cave_time)
             # 绘制爆炸效果
             for fire in fire_list:
                 fire.draw_after_explosion(cave_surface)
@@ -419,10 +436,55 @@ def main():
             screen.blit(cave_surface, (0, 0))
             clock.tick(60)
             pygame.display.flip()
+        elif map_state == 3:
+            pause_surface.fill((0, 0, 0))
 
+            font = pygame.font.Font(None, 36)
+            black = (0, 0, 0)
+            white = (255, 255, 255)
+            red = (255, 0, 0)
+            dark_red = (200, 0, 0)
+            def draw_button(text, center, mouse_pos, default_color=black, hover_color=red):
+                text_render = font.render(text, True, white)
+                text_rect = text_render.get_rect(center=center)
+                button_color = hover_color if text_rect.collidepoint(mouse_pos) else default_color
+                pygame.draw.rect(pause_surface, button_color, text_rect.inflate(20, 10))  # 绘制带有padding的按钮背景
+                pause_surface.blit(text_render, text_rect)
+                return text_rect
 
-    main() #重启游戏
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
+            title_text = font.render('Pause', True, white)
+            title_rect = title_text.get_rect(center=(width / 2, 100))
+            pause_surface.blit(title_text, title_rect)
+            mouse_pos = pygame.mouse.get_pos()
+
+            start_button_rect = draw_button('Continue', (width / 2, 250), mouse_pos, black, dark_red)
+
+            quit_button_rect = draw_button('Main Menu', (width / 2, 300), mouse_pos, black, dark_red)
+
+            exit_button_rect = draw_button('Exit', (width / 2, 350), mouse_pos, black, dark_red)
+
+            if start_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    pygame.time.wait(500)
+                    map_state = now_state
+            if quit_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    pygame.time.wait(500)
+                    break
+            if exit_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    pygame.quit()
+                    sys.exit()
+
+            # show_pause_menu(pause_surface)
+
+            screen.blit(pause_surface, (0,0))
+            clock.tick(60)
+            pygame.display.update()
 
 
 def init():
@@ -446,7 +508,6 @@ def init():
         screen.fill(black)
         waiting_text = font.render(f'Press new key for {setting_key}...', True, white)
         screen.blit(waiting_text, (100, 100))
-
 
         waiting_for_key = True
         while waiting_for_key:
@@ -503,7 +564,7 @@ def init():
                                                                       False).collidepoint(mouse_pos)).collidepoint(mouse_pos)
                 if is_hovering and pygame.mouse.get_pressed()[0]:
                     change_key(k)
-                    pygame.time.wait(500)
+                    # pygame.time.wait(500)
 
                 text_render = font.render(text, True, white)
                 config_surface.blit(text_render, (100, 50 + i * 50))

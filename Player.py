@@ -34,17 +34,17 @@ class Player:
 
         # self.bullet = bullet
 
-    def move(self, keyup):
+    def move(self, keyup, setting):
         kp = pygame.key.get_pressed()
         # print(self.rect)
         # print(self.position)
-        if kp[pygame.K_a] and self.left_available:
+        if kp[setting['left']] and self.left_available:
             self.position[0] = self.position[0] - self.speed
-        if kp[pygame.K_d] and self.right_available:
+        if kp[setting['right']] and self.right_available:
             self.position[0] = self.position[0] + self.speed
-        if kp[pygame.K_s] and self.down_available:
+        if kp[setting['down']] and self.down_available:
             self.position[1] = self.position[1] + self.speed
-        if kp[pygame.K_w] and self.top_available:
+        if kp[setting['up']] and self.top_available:
             self.position[1] = self.position[1] - self.speed
 
         if self.position[1] - self.rect.bottom / 2 <= 0:  # top

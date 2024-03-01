@@ -161,47 +161,6 @@ class Cave:
         for x in block_list:
             self.matrix[x[0], x[1]] = 2
 
-# def find_corners(arr):
-#     corner_rows, corner_cols = arr.shape
-#     positions = {'left_top': None, 'right_top': None, 'left_bot': None, 'right_bot': None}
-#
-#     # 搜索最左上
-#     for i in range(corner_rows):
-#         for j in range(corner_cols):
-#             if arr[i, j] == 0:
-#                 positions['left_top'] = (i, j)
-#                 break
-#         if positions['left_top'] is not None:
-#             break
-#
-#     # 搜索最右上
-#     for i in range(corner_rows):
-#         for j in range(corner_cols - 1, -1, -1):
-#             if arr[i, j] == 0:
-#                 positions['right_top'] = (i, j)
-#                 break
-#         if positions['right_top'] is not None:
-#             break
-#
-#     # 搜索最左下
-#     for i in range(corner_rows - 1, -1, -1):
-#         for j in range(corner_cols):
-#             if arr[i, j] == 0:
-#                 positions['left_bot'] = (i, j)
-#                 break
-#         if positions['left_bot'] is not None:
-#             break
-#
-#     # 搜索最右下
-#     for i in range(corner_rows - 1, -1, -1):
-#         for j in range(corner_cols - 1, -1, -1):
-#             if arr[i, j] == 0:
-#                 positions['right_bot'] = (i, j)
-#                 break
-#         if positions['right_bot'] is not None:
-#             break
-#
-#     return positions
 
 def find_init_position(your_data):
     tem = 1-your_data
@@ -278,13 +237,7 @@ class Enemy:
                 self.position[1] += 1
 
     def draw(self):
-        # original_width, original_height = self.pic.get_size()
-        # width_factor = self.cell_size/original_width
-        # height_factor = self.cell_size / original_height
-
         scaled_image = pygame.transform.scale(self.pic, (self.cell_size, self.cell_size))
-
-
         self.surface.blit(scaled_image, (self.position[1]*self.size, self.position[0]*self.size))
 
 class Player:
@@ -352,10 +305,6 @@ class Player:
                 self.position[1] += 1
 
     def draw(self,):
-        # rect = pygame.Rect(self.position[1] * self.size, self.position[0] * self.size, self.size,
-        #                    self.size)
-        # pygame.draw.rect(self.surface, (255, 0, 0), rect)
-        #
         scaled_image = pygame.transform.scale(self.pic, (self.cell_size, self.cell_size))
         self.surface.blit(scaled_image, (self.position[1]*self.size, self.position[0]*self.size))
     def update_map(self, new_map):
@@ -395,8 +344,6 @@ class Bomb:
 
     def draw_after_explosion(self, surface):
         self.flame_pic = pygame.transform.scale(self.flame_pic, (self.cell_size, self.cell_size))
-
-
         surface.blit(self.flame_pic, (self.position[1], self.position[0]))
         for x in range(self.range):
             surface.blit(self.flame_pic, (self.position[1], self.position[0]+x*self.cell_size+self.cell_size))
@@ -461,52 +408,3 @@ class Bomb:
 
         return cave_map
 
-#
-# thecave = Cave(800, 600, 10)
-# thecave.initial()
-# thecave.cellular_automaton(5)  # step of the cellular automaton
-# thecave.final_map(10)  # the threshold of the area
-# thecave.connect_components()
-# print(thecave.unconnected_cave)
-# print("--------")
-#
-#
-# cave_position = find_init_position(thecave.unconnected_cave)
-# print(cave_position)
-#
-# # labeled, features = label(1 - thecave.unconnected_cave)
-# enemy_position_values = list(cave_position.values())[1:]
-# cave_enemy_list = random.choices(enemy_position_values, k=3)
-# print(cave_enemy_list)
-# # cave = pygame.image.load("picture\cave.jpg")
-# # print("label", labeled)
-# # print("features", features)
-#
-#
-# running = True
-# while running:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-#
-#     # 清屏
-#     screen.fill((0, 0, 0))
-#
-#     # 渲染细胞自动机生成的洞穴地图# cols=80, rows = 60
-#     for row in range(rows):
-#         for col in range(cols):
-#             # color = (255, 255, 255) if thecave.matrix[col, row] == 0 else (0, 0, 0)
-#
-#             if thecave.matrix[row][col] == 0:
-#                 color = (255, 255, 255)
-#             elif thecave.matrix[row][col] == 1:
-#                 color = (0, 0, 0)
-#
-#             pygame.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size, cell_size))
-#
-#     # screen.blit(cave,(0,0))
-#     # 更新屏幕显示
-#     clock.tick(60)
-#     pygame.display.flip()
-#
-# pygame.quit()
