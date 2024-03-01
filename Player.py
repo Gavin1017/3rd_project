@@ -21,10 +21,10 @@ class Player:
         self.right_available = True
         self.top_available = True
         self.down_available = True
-        self.left_pic = pygame.image.load("picture\\left.png")
-        self.right_pic = pygame.image.load("picture\\right.png")
-        self.top_pic = pygame.image.load("picture\\top.png")
-        self.down_pic = pygame.image.load("picture\\down.png")
+        self.left_pic = pygame.image.load("picture\\player_left.png")
+        self.right_pic = pygame.image.load("picture\\player_right.png")
+        self.top_pic = pygame.image.load("picture\\player_top.png")
+        self.down_pic = pygame.image.load("picture\\player_down.png")
         self.shoot_direction = 0
 
         self.attack = 10  # 基础攻击

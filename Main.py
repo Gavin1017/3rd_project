@@ -15,6 +15,7 @@ from Map import *
 import Map_Maze
 import Map_Cave
 import random
+
 pygame.init()
 width, height = 800, 600
 # width, height = 1000, 800
@@ -22,9 +23,19 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("PCG Game")
 clock = pygame.time.Clock()
 
+# 控制键设置
+key_settings = {
+    'up': pygame.K_w,
+    'down': pygame.K_s,
+    'left': pygame.K_a,
+    'right': pygame.K_d
+}
+
 init_surface = pygame.Surface(screen.get_size())
 init_surface.fill((255, 255, 255))
 main_surface = pygame.Surface(screen.get_size())
+
+config_surface = pygame.Surface(screen.get_size())
 
 maze_surface = pygame.Surface(screen.get_size())
 maze_lines = []
@@ -129,8 +140,8 @@ def main():
                 for enemy in enemies[:]:
                     if enemy.check_collision(bullet):
                         player_bullets.remove(bullet)
-                        # map_state = random.randint(1,3)  # 需要切换random(后面请改成random.randint(1,3))
-                        map_state = 2
+                        map_state = random.randint(1,2)  # 需要切换random(后面请改成random.randint(1,3))
+                        # map_state = 2
                         if map_state == 1:
 
                             maze_width = 25
@@ -398,7 +409,7 @@ def main():
             # 判断玩家和敌人的hp值
             if cave_player.hp <= 0:
                 map_state = 0
-                player.hp -= 100  # 主界面玩家的hp
+                player.hp -= 50  # 主界面玩家的hp
             if len(cave_enemy_list) <= 0:
                 enemies.remove(thecave.enemy)
                 map_state = 0
@@ -415,37 +426,149 @@ def main():
 
 
 def init():
-    start_game = True
-    start = pygame.image.load("picture\\start.png")
-    finish = pygame.image.load("picture\\finish.png")
-    start_r = pygame.image.load("picture\\start_r.png")
-    finish_r = pygame.image.load("picture\\finish_r.png")
-    while start_game:
-        clock.tick(60)
-        buttons = pygame.mouse.get_pressed()
-        x1, y1 = pygame.mouse.get_pos()
-        if width * (3 / 8) <= x1 <= width * (5 / 8) and height * (5 / 10) <= y1 <= height * (6 / 10):
-            init_surface.blit(start_r, (width * (3 / 8), height * (5 / 10)))
-            if buttons[0]:
-                start_game = False
-        elif width * (3 / 8) <= x1 <= width * (5 / 8) and height * (7 / 10) <= y1 <= height * (8 / 10):
-            init_surface.blit(finish_r, (width * (3 / 8), height * (7 / 10)))
-            if buttons[0]:
-                pygame.quit()
-                exit()
-        else:
-            init_surface.blit(start, (width * (3 / 8), height * (5 / 10)))
-            init_surface.blit(finish, (width * (3 / 8), height * (7 / 10)))
+    menu = True
+    # 设置屏幕大小
+    width, height = 800, 600
+    screen = pygame.display.set_mode((width, height))
 
-        screen.blit(init_surface, (0, 0))
+    # 设置颜色
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    dark_red = (200, 0, 0)
+    grey = (100, 100, 100)
+    light_grey = (200, 200, 200)
 
-        pygame.display.update()
+    # 设置字体
+    font = pygame.font.Font(None, 36)
+
+    def change_key(setting_key):
+        screen.fill(black)
+        waiting_text = font.render(f'Press new key for {setting_key}...', True, white)
+        screen.blit(waiting_text, (100, 100))
+
+
+        waiting_for_key = True
+        while waiting_for_key:
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key in key_settings.values():
+                        # 如果已经被使用，显示一条消息并重新请求输入
+                        error_text = font.render('Error: Key already used!', True, white)
+                        screen.blit(error_text, (100, 150))
+                        pygame.display.update()
+                        pygame.time.wait(1500)  # 等待1.5秒以便玩家阅读消息
+                        # change_key(setting_key)  # 重新请求新键
+                    else:
+                        key_settings[setting_key] = event.key
+                        waiting_for_key = False
+            clock.tick(60)
+            pygame.display.update()
+
+    def draw_button(text, center, mouse_pos,  default_color=black, hover_color=red):
+        text_render = font.render(text, True, white)
+        text_rect = text_render.get_rect(center=center)
+        button_color = hover_color if text_rect.collidepoint(mouse_pos) else default_color
+        pygame.draw.rect(screen, button_color, text_rect.inflate(20, 10))  # 绘制带有padding的按钮背景
+        screen.blit(text_render, text_rect)
+        return text_rect
+
+    def draw_clickable_text(text, position, mouse_pos, is_hovering):
+        # config_surface.fill(black)
+        color = light_grey if is_hovering else grey
+        text_render = font.render(text, True, white)
+        text_rect = text_render.get_rect(topleft=position)
+        pygame.draw.rect(screen, color, text_rect.inflate(20, 10))
+        screen.blit(text_render, position)
+        return text_rect
+
+    def settings_menu():
+        running = True
+        while running:
+            # init_surface.fill(black)
+            screen.fill(black)
+
+
+            mouse_pos = pygame.mouse.get_pos()
+
+            # 显示和修改当前控制键
+            for i, (k, v) in enumerate(key_settings.items()):
+                key_name = pygame.key.name(v)
+                text = f'{k.capitalize()}: {key_name}'
+                is_hovering = draw_clickable_text(text, (100, 50 + i * 50), mouse_pos,draw_clickable_text(text, (100, 50 + i * 50), mouse_pos,
+                                                                      False).collidepoint(mouse_pos)).collidepoint(mouse_pos)
+                if is_hovering and pygame.mouse.get_pressed()[0]:
+                    change_key(k)
+                    pygame.time.wait(500)
+
+                text_render = font.render(text, True, white)
+                config_surface.blit(text_render, (100, 50 + i * 50))
+
+            # 绘制返回按钮
+            back_button_rect = draw_button('Back', (width - 150, height - 50), mouse_pos , grey, red)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN and back_button_rect.collidepoint(mouse_pos):
+                    running = False
+            # 这里可以添加更多设置选项
+            clock.tick(60)
+            init_surface.blit(config_surface, (0, 0))
+            pygame.display.update()
+
+    while menu:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
+
+        screen.fill(black)
+        # init_surface.fill(black)  # 设置背景颜色
+
+        # 绘制标题
+        title_text = font.render('Procedural Content Generation', True, white)
+        title_rect = title_text.get_rect(center=(width / 2, 100))
+        screen.blit(title_text, title_rect)
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        # 绘制开始游戏按钮，并检测鼠标悬停
+        start_button_rect = draw_button('Start', (width / 2, 250), mouse_pos, black, dark_red)
+
+        # 绘制设置按钮，并检测鼠标悬停
+        config_button_rect = draw_button('Config', (width / 2, 300), mouse_pos, black, dark_red)
+
+        # 绘制结束游戏按钮，并检测鼠标悬停
+        quit_button_rect = draw_button('Finish', (width / 2, 350), mouse_pos, black, dark_red)
+
+        # 检测鼠标点击
+        if start_button_rect.collidepoint(mouse_pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                screen.fill(black)
+                main()
+
+                # menu = False  # 或者切换到游戏场景
+        if config_button_rect.collidepoint(mouse_pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                settings_menu()
+
+        if quit_button_rect.collidepoint(mouse_pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                pygame.quit()
+                sys.exit()
+
+        # screen.blit(init_surface,(0,0))
+        clock.tick(60)
+        pygame.display.update()
 
 
 if __name__ == "__main__":
     init()
-    main()
+    # main()

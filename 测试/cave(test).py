@@ -1,120 +1,106 @@
-# import numpy as np
-#
-#
-# def find_corners(arr):
-#     rows, cols = arr.shape
-#     positions = {'最左上': None, '最右上': None, '最左下': None, '最右下': None}
-#
-#     # 搜索最左上
-#     for i in range(rows):
-#         for j in range(cols):
-#             if arr[i, j] == 0:
-#                 positions['最左上'] = (i, j)
-#                 break
-#         if positions['最左上'] is not None:
-#             break
-#
-#     # 搜索最右上
-#     for i in range(rows):
-#         for j in range(cols - 1, -1, -1):
-#             if arr[i, j] == 0:
-#                 positions['最右上'] = (i, j)
-#                 break
-#         if positions['最右上'] is not None:
-#             break
-#
-#     # 搜索最左下
-#     for i in range(rows - 1, -1, -1):
-#         for j in range(cols):
-#             if arr[i, j] == 0:
-#                 positions['最左下'] = (i, j)
-#                 break
-#         if positions['最左下'] is not None:
-#             break
-#
-#     # 搜索最右下
-#     for i in range(rows - 1, -1, -1):
-#         for j in range(cols - 1, -1, -1):
-#             if arr[i, j] == 0:
-#                 positions['最右下'] = (i, j)
-#                 break
-#         if positions['最右下'] is not None:
-#             break
-#
-#     return positions
-#
-#
-# # 示例数组
-# arr = np.array([[1, 0, 0, 1],
-#                 [1, 0, 1, 0],
-#                 [0, 1, 1, 1],
-#                 [1, 0, 1, 0]])
-#
-# positions = find_corners(arr)
-# for position, coords in positions.items():
-#     print(f"{position}的位置是: {coords}")
+import pygame
+import sys
 
-# import numpy as np
-# from scipy.ndimage import label, find_objects
-# import random
-#
-# # 假设labeled_array是经过label函数处理后的标记数组，n_labels是标记的总数
-# # 例如：labeled_array, n_labels = label(your_data)
-# your_data = np.array([[1, 0, 0, 1],
-#                 [1, 0, 1, 0],
-#                 [0, 0, 1, 1],
-#                 [1, 0, 1, 0]])
-#
-#
-# labeled_array, n_labels = label(1 - your_data)
-# print(labeled_array)
-# # 使用find_objects找到每个标记的切片对象
-#
-# def find_init_position(your_data):
-#     tem = 1-your_data
-#     array, n_labels = label(tem)
-#
-#     index_dict = {}
-#     for i in range(array.shape[0]):
-#         for j in range(array.shape[1]):
-#             num = array[i, j]
-#             if num != 0:
-#                 if num not in index_dict:
-#                     index_dict[num] = []
-#                 index_dict[num].append((i, j))
-#
-#     # 对于每个数字随机选择一个索引
-#     random_indices = {}
-#     for num, indices in index_dict.items():
-#         random_indices[num] = random.choice(indices)
-#
-#     return random_indices
-#
-# print(find_init_position(your_data))
-# import numpy as np
-#
-#
-# cave_position =[(2,3), (1,2), (1,3) ]
-#
-# b= [[1,1,1,1],
-#              [0,1,0,1],
-#              [0,1,0,1]]
-#
-# for x in cave_position:
-#     if b[x[0],x[1]] != 0:
-#         cave_position.remove(x)
-# print(cave_position)
-import numpy as np
+# 初始化Pygame
+pygame.init()
 
-# 假设这是你的两个二维数组
-array1 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-array2 = np.array([[1, 20, 3], [4, 50, 6], [70, 8, 90]])
+# 设置屏幕大小
+screen_width, screen_height = 800, 600
+screen = pygame.display.set_mode((screen_width, screen_height))
 
-# 使用numpy.where找到不同元素的索引
-diff_indices = np.where(array1 != array2)
+# 设置颜色
+black = (0, 0, 0)
+white = (255, 255, 255)
+grey = (100, 100, 100)
+light_grey = (200, 200, 200)
 
-# 打印不同元素的索引
-print('不同元素的索引:', list(zip(diff_indices[0], diff_indices[1])))
-print(array1[1][2])
+# 设置字体
+font = pygame.font.Font(None, 36)
 
+# 控制键设置
+key_settings = {
+    'up': pygame.K_UP,
+    'down': pygame.K_DOWN,
+    'left': pygame.K_LEFT,
+    'right': pygame.K_RIGHT
+}
 
+# 修改键位的函数
+def change_key(setting_key):
+    screen.fill(black)
+    waiting_text = font.render(f'Press new key for {setting_key}...', True, white)
+    screen.blit(waiting_text, (100, 100))
+    pygame.display.update()
+
+    waiting_for_key = True
+    while waiting_for_key:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                key_settings[setting_key] = event.key
+                waiting_for_key = False
+            elif event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+# 绘制可点击文本
+def draw_clickable_text(text, position, mouse_pos, is_hovering):
+    color = light_grey if is_hovering else grey
+    text_render = font.render(text, True, white)
+    text_rect = text_render.get_rect(topleft=position)
+    pygame.draw.rect(screen, color, text_rect.inflate(20, 10))
+    screen.blit(text_render, position)
+    return text_rect
+
+# 绘制按钮并返回其rect
+def draw_button(text, center, mouse_pos, color=black):
+    text_render = font.render(text, True, white)
+    text_rect = text_render.get_rect(center=center)
+    pygame.draw.rect(screen, color, text_rect.inflate(20, 10))  # 绘制按钮背景
+    screen.blit(text_render, text_rect)
+    return text_rect
+
+# 设置界面
+def settings_menu():
+    running = True
+    while running:
+        screen.fill(black)
+        mouse_pos = pygame.mouse.get_pos()
+
+        # 显示和修改当前控制键
+        for i, (k, v) in enumerate(key_settings.items()):
+            key_name = pygame.key.name(v)
+            text = f'{k.capitalize()}: {key_name}'
+            is_hovering = draw_clickable_text(text, (100, 50 + i*50), mouse_pos, draw_clickable_text(text, (100, 50 + i*50), mouse_pos, False).collidepoint(mouse_pos)).collidepoint(mouse_pos)
+            if is_hovering and pygame.mouse.get_pressed()[0]:
+                change_key(k)
+                pygame.time.wait(500)  # 防止立即捕捉到鼠标点击作为按键
+
+        back_button_rect = draw_button('返回主菜单', (screen_width - 150, screen_height - 50), mouse_pos, grey)
+        if back_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+            running = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.update()
+# 主菜单
+def main_menu():
+    menu = True
+    while menu:
+        screen.fill(black)
+        mouse_pos = pygame.mouse.get_pos()
+
+        settings_button_rect = draw_button('config', (screen_width / 2, screen_height / 2), mouse_pos, grey)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and settings_button_rect.collidepoint(mouse_pos):
+                settings_menu()
+
+        pygame.display.update()
+
+main_menu()
