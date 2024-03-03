@@ -10,7 +10,7 @@ class Map:
         self.map = [[0 for x in range(self.width)] for y in range(self.height)]
 
         self.player_pos = [1, 1]
-        self.block_size = 20
+        self.block_size = 30
         self.surface = surface
 
         self.picture = pygame.image.load("picture\\key.jpg")

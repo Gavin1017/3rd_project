@@ -17,8 +17,8 @@ import Map_Cave
 import random
 
 pygame.init()
-width, height = 800, 600
-# width, height = 1000, 800
+# width, height = 800, 600
+width, height = 1200, 800
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("PCG Game")
 clock = pygame.time.Clock()
@@ -128,11 +128,6 @@ def main():
                 #     Map_Maze.doRandomPrim(map_maze)
 
                 # special_event_triggered = True
-            # 如果特定事件被触发，改变所有子弹的属性
-            # if special_event_triggered:
-            #     for bullet in player_bullets:
-            #         bullet.change_speed(5)  # 增加速度
-            #         bullet.change_radius(10)  # 增加半径
 
             # 判断玩家移动
             player.move(keyup, key_settings)
@@ -149,8 +144,8 @@ def main():
                 for enemy in enemies[:]:
                     if enemy.check_collision(bullet):
                         player_bullets.remove(bullet)
-                        map_state = random.randint(1,2)  # 需要切换random(后面请改成random.randint(1,3))
-                        # map_state = 2
+                        # map_state = random.randint(1, 2)  # 需要切换random(后面请改成random.randint(1,3))
+                        map_state = 2
                         if map_state == 1:
 
                             maze_width = 25
@@ -190,7 +185,7 @@ def main():
                             maze_lines.append(current_line.strip())  # 添加最后一行
                         elif map_state == 2:
                             cave_time = 0
-                            cell_size = 15
+                            cell_size = 20
                             bomb_list = []
                             fire_list = []
                             cave_enemy_list = []
@@ -206,15 +201,12 @@ def main():
                             # print("---------------------")
                             cave_player = Map_Cave.Player(cave_position[1], thecave.matrix, cell_size, cave_surface, cell_size)
                             # print(cave_player.position)
-                            enemy_number = random.randint(2,5)
+                            enemy_number = random.randint(2, 5)
                             enemy_position_values = list(cave_position.values())[1:]
                             cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
                             for enemy_pos in cave_enemy_list_pos:
                                 cave_enemy_list.append(Map_Cave.Enemy(enemy_pos, thecave.matrix, cell_size, cave_surface, cell_size ))
                             # print(cave_enemy_list)
-
-                    # if enemy.hit(player.attack):  # 如果敌人被击败
-                    #     enemies.remove(enemy)
 
             main_surface.fill((0, 0, 0))
             main_surface.blit(map, (0, 0))
@@ -245,7 +237,7 @@ def main():
             pygame.display.flip()
             clock.tick(60)
         elif map_state == 1:
-            maze_surface.fill((0,0,0))
+            maze_surface.fill((0, 0, 0))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -294,16 +286,21 @@ def main():
             # map_maze.time = int(map_maze.time)
             # print(int(map_maze.time))
             if int(map_maze.time) <= 0:
-                player.hp -= 100  # 如果没有完成，则扣除玩家的hp值
+                player.hp -= 34  # 如果没有完成，则扣除玩家的hp值
                 map_state = 0
 
             time_str = '{:02d}'.format(int(map_maze.time)) + "s"
             font = pygame.font.SysFont(None, 48)
             text = font.render(time_str, True, (255, 255, 255))
 
-            text_rect = text.get_rect(x=600, y=500)
-            maze_surface.blit(text, text_rect)
+            # text_rect = text.get_rect(x=600, y=500)
+            text_rect = text.get_rect()
 
+            right_bottom_x = width * 0.98 - text_rect.width  # 右下角的X位置
+            right_bottom_y = height * 0.98 - text_rect.height
+
+            # maze_surface.blit(text, text_rect)
+            maze_surface.blit(text, (right_bottom_x, right_bottom_y))
 
 
             # 更新屏幕
@@ -490,8 +487,8 @@ def main():
 def init():
     menu = True
     # 设置屏幕大小
-    width, height = 800, 600
-    screen = pygame.display.set_mode((width, height))
+    # width, height = 800, 600
+    # screen = pygame.display.set_mode((width, height))
 
     # 设置颜色
     black = (0, 0, 0)
