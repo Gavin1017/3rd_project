@@ -9,7 +9,7 @@ import math
 
 
 class Bullet:
-    def __init__(self, x, y, angle):
+    def __init__(self, x, y, angle, owner):
         self.x = x
         self.y = y
         self.angle = angle
@@ -17,6 +17,7 @@ class Bullet:
         self.speed = 5
         self.range = 300
         self.distance = 0
+        self.owner = owner
 
     def update(self):
         self.x += math.cos(self.angle) * self.speed

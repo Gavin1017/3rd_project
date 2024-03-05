@@ -65,18 +65,32 @@ def a_star_search(grid, start, end):
 #     [1, 1, 1, 1]
 # ]
 #
-# # import random
-# # import time
+# import random
+# import time
 # import numpy as np
-# # begin = time.time()
-# # # 创建一个二维列表，尺寸为1200x800
-# # rows, cols = 120, 80
-# # grid = np.array([[random.randint(1, 4) for _ in range(cols)] for _ in range(rows)])
-# #
-# grid = np.array(grid)
+# begin = time.time()
+# # 创建一个二维列表，尺寸为1200x800
+# rows, cols = 1200, 800
+# grid = np.array([[random.randint(1, 4) for _ in range(cols)] for _ in range(rows)])
+#
+#
+# # grid = np.array(grid)
+# # start = Node(0, 0)
+# # end = Node(3, 3)
+# # path = a_star_search(grid, start, end)
+#
+# start_row, start_col = 300, 400  # 左上角
+# end_row, end_col = 500, 600  # 右下角
+# sub_array = grid[start_row:end_row+1, start_col:end_col+1]
+#
+# final = sub_array[::10, ::10]
 # start = Node(0, 0)
-# end = Node(3, 3)
+# end = Node(final.shape[0]-1, final.shape[1]-1)
+#
 # path = a_star_search(grid, start, end)
+#
+#
+#
 # #
 # print("Path:", path)
-# # print("总时间： ",time.time()-begin)
+# print("总时间： ",time.time()-begin)

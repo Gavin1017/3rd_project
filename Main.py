@@ -15,6 +15,7 @@ from Map import *
 import Map_Maze
 import Map_Cave
 import random
+import Astar
 
 pygame.init()
 # width, height = 800, 600
@@ -68,40 +69,45 @@ def main():
     noise_map = the_map.generate_noise_map(width, height, scale, octaves, persistence, lacunarity, seed)
     the_map.render_map(noise_map, the_river_threshold, the_land_threshold, the_mountain_threshold)
     map = pygame.image.load("picture\map.jpg")
-
+    # print(the_map.cell_map)
     # 生成玩家和子弹
-    # player_bullet = Bullet()
+
     player = Player(width, height)
     keydown = ""
     keyup = ""
     player_bullets = []
 
-    # 生成一些敌人
-    enemies = [Enemy(100, 100), Enemy(200, 200)]
+    # 生成一些敌人和子弹
+    main_enemy_number = random.randint(1, 3)
+    enemies = []
+    for x in range(main_enemy_number):
+        enemies.append(Enemy(random.randint(100, 1000), random.randint(100, 700), pygame.time.get_ticks()))
+    enemy_bullets = []
 
-    # 特定事件
-    special_event_triggered = False
+
+    # # 特定事件
+    # special_event_triggered = False
 
     # 状态机判断当前实在主地图还是分地图。主地图是0，分地图为1，2，3...
     map_state = 0
-    now_state = 0
+    now_state = 0  # 如果暂停，则保存当前状态
 
     # 声明地图迷宫
     map_maze = ""
 
+    # tick时间
+    all_tick = 0
+    start_ticks = pygame.time.get_ticks()  # 当前时间
+
     running = True
     while running:
-
+        all_tick += 1/60
         if map_state == 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     pygame.quit()
                     exit()
-                # elif event.type == pygame.MOUSEBUTTONDOWN:
-                #     if event.button == 1:  # 检测左键点击
-                #         mouse_x, mouse_y = pygame.mouse.get_pos()
-                #         print(f"Left mouse button clicked at ({mouse_x}, {mouse_y})")
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         now_state = map_state
@@ -118,7 +124,7 @@ def main():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     angle = math.atan2(mouse_y - player.position[1], mouse_x - player.position[0])
-                    player_bullets.append(Bullet(player.position[0], player.position[1], angle))
+                    player_bullets.append(Bullet(player.position[0], player.position[1], angle, player))
                 # 按下空格键触发特定事件
                 # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 #     map_state = 1
@@ -129,9 +135,24 @@ def main():
 
                 # special_event_triggered = True
 
-            # 判断玩家移动
+            enemy_positions = []
+            for enemy in enemies:
+                enemy_positions.append((enemy.x, enemy.y))
+
+            # 判断玩家移动和速度
             player.move(keyup, key_settings)
             player.shooting_direction()
+
+            if the_map.map_color[player.position[1]][player.position[0]] == (0, 0, 255):
+                player.speed = 1
+            elif the_map.map_color[player.position[1]][player.position[0]] == (255, 255, 255):
+                player.speed = 4
+            elif the_map.map_color[player.position[1]][player.position[0]] == (139, 69, 19):
+                player.speed = 3
+            else:
+                player.speed = 2
+            # print(player.position)
+
 
             # 更新子弹
             for bullet in player_bullets[:]:
@@ -139,11 +160,23 @@ def main():
                 if bullet.is_out_of_range():
                     player_bullets.remove(bullet)
 
+            for enemy_bullet in enemy_bullets[:]:
+                enemy_bullet.update()
+                if enemy_bullet.is_out_of_range():
+                    enemy_bullets.remove(enemy_bullet)
+
+
+            break_flag = False
             # 检测敌人和子弹的碰撞
             for bullet in player_bullets[:]:
                 for enemy in enemies[:]:
                     if enemy.check_collision(bullet):
                         player_bullets.remove(bullet)
+                        enemy.health -= player.attack
+                        break
+
+                    if enemy.health <= 0:
+
                         # map_state = random.randint(1, 2)  # 需要切换random(后面请改成random.randint(1,3))
                         map_state = 2
                         if map_state == 1:
@@ -185,7 +218,7 @@ def main():
                             maze_lines.append(current_line.strip())  # 添加最后一行
                         elif map_state == 2:
                             cave_time = 0
-                            cell_size = 20
+                            cell_size = 10
                             bomb_list = []
                             fire_list = []
                             cave_enemy_list = []
@@ -206,7 +239,17 @@ def main():
                             cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
                             for enemy_pos in cave_enemy_list_pos:
                                 cave_enemy_list.append(Map_Cave.Enemy(enemy_pos, thecave.matrix, cell_size, cave_surface, cell_size ))
+                        break_flag = True
+                        break
+                if break_flag == True:
+                    break
+
                             # print(cave_enemy_list)
+
+            for enemy_bullet in enemy_bullets[:]:
+                if player.check_collision(enemy_bullet):
+                    player.hp -= enemy_bullet.owner.attack
+                    enemy_bullets.remove(enemy_bullet)
 
             main_surface.fill((0, 0, 0))
             main_surface.blit(map, (0, 0))
@@ -218,14 +261,128 @@ def main():
             # 绘制子弹
             for bullet in player_bullets:
                 bullet.draw(main_surface)
-            # 绘制敌人
+
+            for enemy_bullet in enemy_bullets:
+                enemy_bullet.draw(main_surface)
+
+            # 移动敌人
+            current_ticks = pygame.time.get_ticks()
             for enemy in enemies:
-                main_surface.blit(enemy.pic,
-                                  (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
+                enemy_position = [enemy.x, enemy.y]
+                distance = np.linalg.norm(np.array(enemy_position) - np.array(player.position))
+                shooting_elapsed_time = current_ticks - enemy.shooting_time
+                moving_elapsed_time = current_ticks - enemy.moving_time
+                if distance > 500:
+                    enemy.random_move(moving_elapsed_time, width, height)
+                    if moving_elapsed_time >= 1000:
+                        enemy.moving_time = pygame.time.get_ticks()
+                elif distance <= 500:
+
+                    # direction = [player.position[0] - enemy.x, player.position[1] - enemy.y]
+                    # distance = math.sqrt(direction[0] ** 2 + direction[1] ** 2)
+
+                    if player.position[0] - enemy.x > 150:
+                        enemy.pic = enemy.right_pic
+                        enemy.x += enemy.speed
+                    if player.position[0] - enemy.x < -150:
+                        enemy.pic = enemy.left_pic
+                        enemy.x -= enemy.speed
+                    if player.position[1] - enemy.y > 150:
+                        enemy.pic = enemy.down_pic
+                        enemy.y += enemy.speed
+                    if player.position[1] - enemy.y < -150:
+                        enemy.pic = enemy.top_pic
+                        enemy.y -= enemy.speed
+
+                    # for position in enemy_positions:
+                    #     if (enemy.x, enemy.y) == position:
+                    #         enemy_positions.remove(position)
+                    #
+                    # for x in range(len(enemy_positions)):
+                    #     if enemy.pic.get_rect().collidepoint()
+
+
+
+
+
+                    # enemy.step += enemy.speed/10
+                    # enemy.a_star_move(moving_elapsed_time)
+
+                    # if moving_elapsed_time >= 200:
+                    #     start = Astar.Node(int(enemy.y/10), int(enemy.x/10))
+                    #     end = Astar.Node(int(player.position[1]/10), int(player.position[0]/10))
+                    #     # path = Astar.a_star_search(the_map.cell_map, start, end)
+                    #     # print(path)
+                    #     np_map = np.array(the_map.cell_map)
+                    #     scaled_array = np_map[::10, ::10]
+                    #     path = Astar.a_star_search(scaled_array, start, end)
+                    #     enemy.path = path
+                    #     enemy.step = 0
+                    #     enemy.moving_time = pygame.time.get_ticks()
+                    # print("y标：", abs(enemy.y - player.position[1]))
+                    # print("x标：", abs(enemy.x - player.position[0]))
+
+                    if distance <= 300:
+                        if shooting_elapsed_time >= 1000:
+                            enemy_angle = math.atan2(player.position[1] - enemy.y, player.position[0] - enemy.x)
+                            enemy_bullets.append(Bullet(enemy.x, enemy.y, enemy_angle, enemy))
+                            enemy.shooting_time = pygame.time.get_ticks()
+
+
+
+                if 0 <= enemy.x < width and 0 <= enemy.y < height:
+                    if the_map.map_color[enemy.y][enemy.x] == (0, 0, 255): # 河流
+                        enemy.speed = 1
+                    elif the_map.map_color[enemy.y][enemy.x] == (255, 255, 255): # 陆地
+                        enemy.speed = 4
+                    elif the_map.map_color[enemy.y][enemy.x] == (139, 69, 19): # 山
+                        enemy.speed = 3
+                    else:#交汇
+                        enemy.speed = 2
+
+
+
+
+
+
+                # main_surface.blit(enemy.pic,
+                #                   (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
+
                 # main_surface.blit(pygame.transform.smoothscale(enemy.pic, (int(enemy.rect[2]/3), int(enemy.rect[3]/3))),
                 #             (enemy.x - enemy.rect.right / 2,
                 #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
                 # enemy.draw(main_surface)
+
+
+            now_main_enemy_number = len(enemies)
+            if now_main_enemy_number >= 2:
+                for x in range(now_main_enemy_number):
+                    if x <= now_main_enemy_number-2:
+                        if enemies[x].check_enemy_collision(enemies[x+1]):
+                            enemies[x + 1].x += 1
+                            enemies[x + 1].y += 1
+                            if enemies[x + 1].x >= width:
+                                enemies[x + 1].x = width - 1
+                            if enemies[x + 1].y >= height:
+                                enemies[x + 1].y = width - 1
+
+
+                        # if enemies[x].pic.get_rect().colliderect(enemies[x+1].pic.get_rect()):
+                        #     print("enemy1", (enemies[x].x, enemies[x].y))
+                        #     print("enemy2", (enemies[x+1].x, enemies[x+1].y))
+                        #     enemies[x+1].x += 1
+                        #     enemies[x + 1].y += 1
+                        #     if enemies[x+1].x >= width:
+                        #         enemies[x + 1].x = width-1
+                        #     if enemies[x+1].y >= height:
+                        #         enemies[x + 1].y = width - 1
+
+            #绘制敌人
+            for enemy in enemies:
+                main_surface.blit(enemy.pic,
+                                  (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
+
+
             # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
             # print(player.hp)
             if player.hp <= 0: # 判断血条来跳出是否结束或这重启（未完成）
@@ -452,7 +609,8 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-
+                    pygame.quit()
+                    exit()
             title_text = font.render('Pause', True, white)
             title_rect = title_text.get_rect(center=(width / 2, 100))
             pause_surface.blit(title_text, title_rect)

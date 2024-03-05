@@ -14,8 +14,8 @@ class Player:
         self.width = the_width
         self.height = the_height
         # self.position = [300, 400]
-        self.speed = 5
-        self.pic = pygame.image.load("picture\\player.png")
+        self.speed = 4
+        self.pic = pygame.image.load("picture\\player_down.png")
         self.rect = self.pic.get_rect()
         self.left_available = True
         self.right_available = True
@@ -86,9 +86,13 @@ class Player:
             self.attack += equipment.attack
             self.defense += equipment.defense
 
-    # def check_collision(self, the_enemy):
-    #     enemy_rect = pygame.Rect(the_enemy.x - the_enemy.rect.right / 2, the_enemy.y - the_enemy.rect.bottom / 2,
-    #                              the_enemy.rect.right,the_enemy.rect.bottom)
-    #     player_rect = pygame.Rect(self.position[0] - self.rect.right / 2, self.position[1] - self.rect.bottom / 2,
-    #                               self.rect.right,self.rect.bottom)
-    #     return player_rect.colliderect(enemy_rect)
+    def check_collision(self, enemy_bullet):
+        nearest_x = max(self.position[0] - self.rect.right / 2, min(enemy_bullet.x, self.position[0] + self.rect.right / 2))
+        nearest_y = max(self.position[1] - self.rect.bottom / 2, min(enemy_bullet.y, self.position[1] + self.rect.bottom / 2))
+
+        # 计算这个点到圆心的距离
+        distance_x = enemy_bullet.x - nearest_x
+        distance_y = enemy_bullet.y - nearest_y
+        distance = math.sqrt(distance_x ** 2 + distance_y ** 2)
+
+        return distance < enemy_bullet.radius
