@@ -222,8 +222,6 @@ def main():
                             bomb_list = []
                             fire_list = []
                             cave_enemy_list = []
-
-
                             # cols, rows = width // cell_size, height // cell_size  # cols=80, rows = 60
                             thecave = Map_Cave.Cave(width, height, cell_size, enemy)
                             thecave.initial()
@@ -236,8 +234,7 @@ def main():
                             # print("---------------------")
                             cave_player = Map_Cave.Player(cave_position[1], thecave.matrix, cell_size, cave_surface, cell_size)
                             # print(cave_player.position)
-                            enemy_number = random.randint(2, 4) # 记得修改
-                            enemy_number = 1
+                            enemy_number = random.randint(2, 5)
                             enemy_position_values = list(cave_position.values())[1:]
                             cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
                             for enemy_pos in cave_enemy_list_pos:
@@ -388,9 +385,9 @@ def main():
 
             # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
             # print(player.hp)
-            if player.hp <= 0:  # 判断血条来跳出是否结束或这重启（未完成）
+            if player.hp <= 0: # 判断血条来跳出是否结束或这重启（未完成）
                 running = False
-            elif len(enemies) <= 0:
+            elif len(enemies)<=0:
                 running = False
 
             screen.blit(main_surface, (0, 0))
@@ -520,11 +517,11 @@ def main():
                 for col in range(cols):
 
                     if thecave.matrix[row][col] == 0:
-                        color = (255, 255, 255)  # 白色路径
+                        color = (255, 255, 255)  # 白色
                     elif thecave.matrix[row][col] == 1:
-                        color = (0, 0, 0)  # 黑色墙壁
-                    elif thecave.matrix[row][col] == 2:  # 棕色障碍物
-                        color = (165, 42, 42)
+                        color = (0, 0, 0)  # 黑色
+                    elif thecave.matrix[row][col] == 2:
+                        color = (165,42,42)
                     pygame.draw.rect(cave_surface, color, (col * cell_size, row * cell_size, cell_size, cell_size))
             # screen.blit(cave,(0,0))
             # update the cave surface
@@ -537,146 +534,6 @@ def main():
                 cave_player.invincible_after_injured -= 1/60
             if cave_player.invincible_after_injured > 0:
                 cave_player.invincible_after_injured -= 1/60
-
-            # 每隔一定时间来进行判断敌人移动
-            for enemy in cave_enemy_list:
-                if enemy.time >= 0.5:  # 判断经过了多少时间，来看是否需要进行计算。
-                    enemy.time = 0
-                    cave_map = np.copy(enemy.cave)
-                    cave_map[cave_map == 1] = 10000000  # 设置非常大的数值来作为障碍物，a*算法就不会走这条路
-                    cave_map[cave_map == 2] = 10
-                    cave_map[cave_map == 0] = 1
-                    start_pos = Astar.Node(enemy.position[0], enemy.position[1])  # 敌人所在位置
-                    end_pos = Astar.Node(cave_player.position[0], cave_player.position[1])  # 玩家所在位置
-                    distance = Astar.heuristic(start_pos, end_pos)
-
-                    if distance > 10:
-                        enemy_player_path = Astar.a_star_search(cave_map, start_pos, end_pos)
-                        next_action = []
-
-                        if enemy.state == 0:
-                            if enemy.cave[enemy_player_path[1][0]][enemy_player_path[1][1]] != 2:  # 如果下一步不是障碍物
-                                # next_action = enemy_player_path[1]
-                                enemy_rest = cave_enemy_list.copy()
-                                enemy_rest.remove(enemy)
-                                has_enemy = False
-                                has_bomb = False
-
-                                for x in enemy_rest:
-                                    if [enemy_player_path[1][0], enemy_player_path[1][1]] == x.position:
-                                        has_enemy = True
-                                for y in bomb_list:
-                                    if [enemy_player_path[1][0], enemy_player_path[1][1]] == [y.position[0]/y.cell_size,y.position[1]/y.cell_size]:
-                                        has_bomb = True
-
-                                if has_enemy!=True and has_bomb!=True:
-                                    enemy.position = [enemy_player_path[1][0], enemy_player_path[1][1]]
-                                elif has_bomb == True:
-                                    enemy.state = 2
-                            else:
-                                enemy_bomb_position = enemy.position.copy()
-                                enemy_bomb_position = (enemy_bomb_position[0] * cell_size, enemy_bomb_position[1] * cell_size)
-                                bomb_list.append(Map_Cave.Bomb(enemy_bomb_position, enemy, cell_size))
-                                enemy.last_bomb = bomb_list[-1]
-
-                                enemy.state = 10
-                        elif enemy.state == 10:
-                            l = bomb_list[0].range+1
-                            cx = enemy.position[0]
-                            cy = enemy.position[1]
-                            # 计算正方形所有坐标
-
-
-                            square_coords = [(x, y) for x in range(cx - l, cx + l + 1) for y in
-                                             range(cy - l, cy + l + 1)]
-
-                            # 计算十字形坐标
-                            cross_coords = [(cx, y) for y in range(cy - l, cy + l + 1)] + [(x, cy) for x in
-                                                                                           range(cx - l, cx + l + 1)]
-                            # 去除重复的中心点坐标
-                            cross_coords = list(set(cross_coords))
-
-                            # 从正方形坐标中去除十字形坐标，得到除十字外的正方形坐标
-                            exclusive_square_coords = [coord for coord in square_coords if coord not in cross_coords]
-
-
-                            # print("十字坐标：", exclusive_square_coords)
-                            # print("--------------")
-                            # print("敌人的坐标：", enemy.position)
-
-                            # 长条
-                            tem_list = []
-                            large_cross_coords = [(cx, y) for y in range(cy - 10, cy + 10 + 1)] + [(x, cy) for x in
-                                                                                           range(cx - 10, cx + 10 + 1)]
-                            minus_list = list(set(large_cross_coords) - set(cross_coords))
-
-                            all_list = exclusive_square_coords + minus_list
-                            # 提前消除大于边界的坐标
-                            tem_arr = np.array(all_list)
-                            # print("地图类型：",type(enemy.cave))
-                            indicesx = (tem_arr[:, 0] >= 0) & (tem_arr[:, 0] < enemy.cave.shape[0])
-                            indicesy = (tem_arr[:, 1] >= 0) & (tem_arr[:, 1] < enemy.cave.shape[1])
-                            combined_indices = indicesx & indicesy
-                            filtered_arr = tem_arr[combined_indices]
-                            all_list = list(filtered_arr)
-
-                            for coord in all_list:
-                                if enemy.cave[coord[0]][coord[1]] != 1 and enemy.cave[coord[0]][coord[1]] != 2:
-                                    tem_list.append(coord)
-
-                            # for coord in exclusive_square_coords:
-                            #     if enemy.cave[coord[0]][coord[1]] != 1 and enemy.cave[coord[0]][coord[1]] != 2:
-                            #         tem_list.append(coord)
-                            # i = 0
-                            # final_path = [1]*1000
-                            now_pos = Astar.Node(enemy.position[0], enemy.position[1])
-                            goal_pos = Astar.Node(tem_list[0][0], tem_list[0][1])
-                            goal_path = Astar.a_star_search(cave_map, now_pos, goal_pos)
-                            final_path = goal_path
-
-                            # i = 0  # 防止越界
-                            for coord in tem_list:
-                                i = 0
-                                # now_pos = Astar.Node(enemy.position[0], enemy.position[1])
-                                goal_pos = Astar.Node(coord[0], coord[1])
-                                goal_path = Astar.a_star_search(cave_map, now_pos, goal_pos)
-
-                                if i == 0:
-                                    for check_path in goal_path:
-                                        # print("hedui", check_path)
-                                        if enemy.cave[check_path[0]][check_path[1]] == 2 or enemy.cave[check_path[0]][check_path[1]] == 1:
-                                            i = 1
-
-                                if len(goal_path) <= len(final_path) and i !=1:
-                                    final_path = goal_path
-                                    i = 0
-                            # print(final_path)
-                            final_path.pop(0)
-                            enemy.next_position = final_path
-                            next_is_bomb = False
-                            for all_bomb in bomb_list:
-                                if [enemy.next_position[0][0], enemy.next_position[0][1]] == [all_bomb.position[0]/all_bomb.cell_size, all_bomb.position[1]/all_bomb.cell_size]:
-                                    next_is_bomb = True
-
-                            if not next_is_bomb:
-                                enemy.position = [enemy.next_position[0][0], enemy.next_position[0][1]]
-                                enemy.next_position.pop(0)
-                                # print(enemy.next_position)
-                                enemy.state = 11
-                        elif enemy.state == 11:
-                            if len(enemy.next_position) != 0:
-                                enemy.position = [enemy.next_position[0][0], enemy.next_position[0][1]]
-                                enemy.next_position.pop(0)
-                            else:
-                                if enemy.last_bomb.remaining_time + enemy.last_bomb.flame_time<=0:
-                                    enemy.state =0
-
-
-
-
-
-
-                enemy.time += 1 / 60
 
             # 绘制敌人
             for enemy in cave_enemy_list:
@@ -728,12 +585,8 @@ def main():
                 enemies.remove(thecave.enemy)
                 map_state = 0
 
-            # 更新敌人内置地图
-            for enemy in cave_enemy_list:
-                enemy.update_map(thecave.matrix)
-
             cave_time += 1/60
-            cave_player.update_map(thecave.matrix)  #更新玩家地图
+            cave_player.update_map(thecave.matrix)
             screen.blit(cave_surface, (0, 0))
             clock.tick(60)
             pygame.display.flip()

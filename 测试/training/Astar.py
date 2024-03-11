@@ -61,26 +61,23 @@ def a_star_search(grid, start, end):
 # grid = [
 #     [1, 1, 1, 1],
 #     [1, 1, 0, 1],
-#     [2**62 - 1, 2, 2**62 - 1, 1],
+#     [3, 2, 3, 1],
 #     [1, 1, 1, 1]
 # ]
 #
-import random
+# import random
 # import time
-import numpy as np
+# import numpy as np
 # begin = time.time()
 # # 创建一个二维列表，尺寸为1200x800
-# rows, cols = 80, 53
+# rows, cols = 1200, 800
 # grid = np.array([[random.randint(1, 4) for _ in range(cols)] for _ in range(rows)])
 #
 #
-# grid = np.array(grid)
-# list = [(0, 0)]
-# a = list[0]
-# print()
-# start = Node(list[0][0], list[0][1])
-# end = Node(3, 3)
-# path = a_star_search(grid, start, end)
+# # grid = np.array(grid)
+# # start = Node(0, 0)
+# # end = Node(3, 3)
+# # path = a_star_search(grid, start, end)
 #
 # start_row, start_col = 300, 400  # 左上角
 # end_row, end_col = 500, 600  # 右下角
@@ -95,10 +92,5 @@ import numpy as np
 #
 #
 # #
-# print(heuristic(start, end))
 # print("Path:", path)
-# print(len(path))
-# print(float('inf'))
-# print(grid)
 # print("总时间： ",time.time()-begin)
-

@@ -8,7 +8,6 @@ import cv2
 import math
 
 
-
 class Enemy:
     def __init__(self, x, y, append_time):
         self.x = x

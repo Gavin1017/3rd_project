@@ -6,7 +6,6 @@ from scipy.ndimage import label, find_objects
 # from skimage.draw import line
 from skimage.graph import route_through_array
 import random
-from Astar import *
 
 # clock = pygame.time.Clock()
 # width, height = 800, 600
@@ -198,18 +197,6 @@ class Enemy:
         self.pic = pygame.image.load("picture\\cave_monster.jpg")
         self.cell_size = cell_size
 
-        # 状态0的时候是移动，状态10是放下炸弹并移动,状态11是移动到指定位置(下一格不是炸弹)    状态2是下一步有炸弹
-        self.state = 0
-
-        # 每一步之间的时间
-        self.time = 0
-
-        # 上一次放的炸弹
-        self.last_bomb = Bomb(0, 0, 0)
-
-        # 下一步会走的位置
-        self.next_position = []
-
     def move(self, direction, bomb_list):
         "'UP', 'DOWN', 'LEFT', 'RIGHT'"
 
@@ -249,34 +236,6 @@ class Enemy:
                 self.position[1] -= 1
             elif direction == 'RIGHT' and self.cave[x][y + 1] == 0:
                 self.position[1] += 1
-
-    # def action(self, player_position):
-    #     cave_map = np.copy(self.cave)
-    #     cave_map[cave_map == 1] = 2**60 - 1  #设置非常大的数值来作为障碍物，a*算法就不会走这条路
-    #     cave_map[cave_map == 2] = 10
-    #     cave_map[cave_map == 0] = 1
-    #     start_pos = Node(self.position[0], self.position[1])  # 敌人所在位置
-    #     end_pos = Node(player_position[0], player_position[1])  # 玩家所在位置
-    #     distance = heuristic(start_pos, end_pos)
-    #
-    #     if distance > 10:
-    #         enemy_player_path = a_star_search(cave_map, start_pos, end_pos)
-    #         next_action = []
-    #
-    #         if self.state == 0:
-    #             if self.cave[enemy_player_path[1][0]][enemy_player_path[1][1]] != 2:  # 如果下一步不是障碍物
-    #                 # next_action = enemy_player_path[1]
-    #                 self.position = [enemy_player_path[1][0], enemy_player_path[1][1]]
-    #             else:
-
-
-
-
-
-
-
-    def update_map(self, new_map):
-        self.cave = new_map
 
     def draw(self):
         scaled_image = pygame.transform.scale(self.pic, (self.cell_size, self.cell_size))
@@ -361,7 +320,7 @@ class Bomb:
         self.remaining_time = self.explosion_time  # 炸弹剩余时间
         self.bomb_pic = pygame.image.load("picture\\bomb.png")
         self.flame_pic = pygame.image.load("picture\\bomb_fire.png")
-        self.flame_time = 2  # 火焰留存时间2s（也是火焰剩余时间）
+        self.flame_time = 2  # 火焰留存时间2s
         self.cell_size = cell_size
 
     def check_collision(self, player: Player, enemy_position_list: list):
