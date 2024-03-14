@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import random
 from pygame.locals import *
@@ -49,6 +51,9 @@ fire_list = []
 pause_surface = pygame.Surface(screen.get_size())
 # init_surface.fill((255,255,255))
 
+congratulation_surface = pygame.Surface(screen.get_size())
+
+failed_surface = pygame.Surface(screen.get_size())
 
 
 def main():
@@ -69,7 +74,6 @@ def main():
     noise_map = the_map.generate_noise_map(width, height, scale, octaves, persistence, lacunarity, seed)
     the_map.render_map(noise_map, the_river_threshold, the_land_threshold, the_mountain_threshold)
     map = pygame.image.load("picture\map.jpg")
-    # print(the_map.cell_map)
     # 生成玩家和子弹
 
     player = Player(width, height)
@@ -79,14 +83,11 @@ def main():
 
     # 生成一些敌人和子弹
     main_enemy_number = random.randint(1, 3)
+    # main_enemy_number = 1
     enemies = []
     for x in range(main_enemy_number):
         enemies.append(Enemy(random.randint(100, 1000), random.randint(100, 700), pygame.time.get_ticks()))
     enemy_bullets = []
-
-
-    # # 特定事件
-    # special_event_triggered = False
 
     # 状态机判断当前实在主地图还是分地图。主地图是0，分地图为1，2，3...
     map_state = 0
@@ -125,15 +126,6 @@ def main():
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     angle = math.atan2(mouse_y - player.position[1], mouse_x - player.position[0])
                     player_bullets.append(Bullet(player.position[0], player.position[1], angle, player))
-                # 按下空格键触发特定事件
-                # if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                #     map_state = 1
-                #     maze_width = 25
-                #     maze_height = 25
-                #     map_maze = Map_Maze.Map(maze_width, maze_height, maze_surface)
-                #     Map_Maze.doRandomPrim(map_maze)
-
-                # special_event_triggered = True
 
             enemy_positions = []
             for enemy in enemies:
@@ -176,9 +168,9 @@ def main():
                         break
 
                     if enemy.health <= 0:
-
-                        # map_state = random.randint(1, 2)  # 需要切换random(后面请改成random.randint(1,3))
-                        map_state = 2
+                        enemy.health = 100  # 复活
+                        map_state = random.randint(1, 2)  # 需要切换random(后面请改成random.randint(1,3))
+                        # map_state = 2
                         if map_state == 1:
 
                             maze_width = 25
@@ -222,7 +214,7 @@ def main():
                             bomb_list = []
                             fire_list = []
                             cave_enemy_list = []
-
+                            bomb_range = 0
 
                             # cols, rows = width // cell_size, height // cell_size  # cols=80, rows = 60
                             thecave = Map_Cave.Cave(width, height, cell_size, enemy)
@@ -237,7 +229,7 @@ def main():
                             cave_player = Map_Cave.Player(cave_position[1], thecave.matrix, cell_size, cave_surface, cell_size)
                             # print(cave_player.position)
                             enemy_number = random.randint(2, 4) # 记得修改
-                            enemy_number = 1
+                            # enemy_number = 1
                             enemy_position_values = list(cave_position.values())[1:]
                             cave_enemy_list_pos = random.choices(enemy_position_values, k=enemy_number)
                             for enemy_pos in cave_enemy_list_pos:
@@ -246,8 +238,6 @@ def main():
                         break
                 if break_flag == True:
                     break
-
-                            # print(cave_enemy_list)
 
             for enemy_bullet in enemy_bullets[:]:
                 if player.check_collision(enemy_bullet):
@@ -258,9 +248,7 @@ def main():
             main_surface.blit(map, (0, 0))
             main_surface.blit(player.pic,
                               (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))
-            #
-            # main_surface.blit(pygame.transform.smoothscale(player.pic, (int(player.rect[2]), int(player.rect[3]))),
-            #             (player.position[0] - player.rect.right / 2, player.position[1] - player.rect.bottom / 2))  # 放大或者缩小
+
             # 绘制子弹
             for bullet in player_bullets:
                 bullet.draw(main_surface)
@@ -281,9 +269,6 @@ def main():
                         enemy.moving_time = pygame.time.get_ticks()
                 elif distance <= 500:
 
-                    # direction = [player.position[0] - enemy.x, player.position[1] - enemy.y]
-                    # distance = math.sqrt(direction[0] ** 2 + direction[1] ** 2)
-
                     if player.position[0] - enemy.x > 150:
                         enemy.pic = enemy.right_pic
                         enemy.x += enemy.speed
@@ -296,34 +281,6 @@ def main():
                     if player.position[1] - enemy.y < -150:
                         enemy.pic = enemy.top_pic
                         enemy.y -= enemy.speed
-
-                    # for position in enemy_positions:
-                    #     if (enemy.x, enemy.y) == position:
-                    #         enemy_positions.remove(position)
-                    #
-                    # for x in range(len(enemy_positions)):
-                    #     if enemy.pic.get_rect().collidepoint()
-
-
-
-
-
-                    # enemy.step += enemy.speed/10
-                    # enemy.a_star_move(moving_elapsed_time)
-
-                    # if moving_elapsed_time >= 200:
-                    #     start = Astar.Node(int(enemy.y/10), int(enemy.x/10))
-                    #     end = Astar.Node(int(player.position[1]/10), int(player.position[0]/10))
-                    #     # path = Astar.a_star_search(the_map.cell_map, start, end)
-                    #     # print(path)
-                    #     np_map = np.array(the_map.cell_map)
-                    #     scaled_array = np_map[::10, ::10]
-                    #     path = Astar.a_star_search(scaled_array, start, end)
-                    #     enemy.path = path
-                    #     enemy.step = 0
-                    #     enemy.moving_time = pygame.time.get_ticks()
-                    # print("y标：", abs(enemy.y - player.position[1]))
-                    # print("x标：", abs(enemy.x - player.position[0]))
 
                     if distance <= 300:
                         if shooting_elapsed_time >= 1000:
@@ -340,22 +297,8 @@ def main():
                         enemy.speed = 4
                     elif the_map.map_color[enemy.y][enemy.x] == (139, 69, 19): # 山
                         enemy.speed = 3
-                    else:#交汇
+                    else:  # 交汇
                         enemy.speed = 2
-
-
-
-
-
-
-                # main_surface.blit(enemy.pic,
-                #                   (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
-
-                # main_surface.blit(pygame.transform.smoothscale(enemy.pic, (int(enemy.rect[2]/3), int(enemy.rect[3]/3))),
-                #             (enemy.x - enemy.rect.right / 2,
-                #              enemy.y - enemy.rect.bottom / 2))  # 放大或者缩小
-                # enemy.draw(main_surface)
-
 
             now_main_enemy_number = len(enemies)
             if now_main_enemy_number >= 2:
@@ -369,29 +312,37 @@ def main():
                             if enemies[x + 1].y >= height:
                                 enemies[x + 1].y = width - 1
 
-
-                        # if enemies[x].pic.get_rect().colliderect(enemies[x+1].pic.get_rect()):
-                        #     print("enemy1", (enemies[x].x, enemies[x].y))
-                        #     print("enemy2", (enemies[x+1].x, enemies[x+1].y))
-                        #     enemies[x+1].x += 1
-                        #     enemies[x + 1].y += 1
-                        #     if enemies[x+1].x >= width:
-                        #         enemies[x + 1].x = width-1
-                        #     if enemies[x+1].y >= height:
-                        #         enemies[x + 1].y = width - 1
-
-            #绘制敌人
+            # 绘制敌人
             for enemy in enemies:
                 main_surface.blit(enemy.pic,
                                   (enemy.x - enemy.rect.right / 2, enemy.y - enemy.rect.bottom / 2))
 
-
-            # print((enemies[0].x - enemies[0].rect.right / 2, enemies[0].y - enemies[0].rect.bottom / 2))
-            # print(player.hp)
             if player.hp <= 0:  # 判断血条来跳出是否结束或这重启（未完成）
-                running = False
+                # running = False
+                map_state = 5
             elif len(enemies) <= 0:
-                running = False
+                map_state = 4
+                # running = False
+            #  展示玩家血条
+            max_health = 100
+            # 血条位置和尺寸
+            bar_width = 200
+            bar_height = 20
+            bar_x = (width - bar_width) / 2  # 血条水平居中
+            bar_y = 10  # 血条距离屏幕顶部的距离
+            font = pygame.font.SysFont(None, 30)
+            # 绘制血条背景
+            pygame.draw.rect(main_surface, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height))
+
+            # 计算当前血量的宽度比例
+            health_width = (player.hp / max_health) * bar_width
+
+            # 绘制当前血量
+            pygame.draw.rect(main_surface, (255, 0, 0), (bar_x, bar_y, health_width, bar_height))
+
+            # 显示血量文本
+            health_text = font.render(f"{player.hp} / {max_health}", True, (255, 0, 0))
+            main_surface.blit(health_text, (bar_x + (bar_width / 2) - (health_text.get_width() / 2), bar_y))
 
             screen.blit(main_surface, (0, 0))
             pygame.display.flip()
@@ -476,6 +427,7 @@ def main():
             # cell_size = 10
             cols, rows = width // cell_size, height // cell_size  # cols=80, rows = 60
 
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -535,58 +487,93 @@ def main():
                 cave_player.cd -= 1/60
             if cave_player.invincible_after_injured > 0:
                 cave_player.invincible_after_injured -= 1/60
-            if cave_player.invincible_after_injured > 0:
-                cave_player.invincible_after_injured -= 1/60
+            # if cave_player.invincible_after_injured > 0:
+            #     cave_player.invincible_after_injured -= 1/60
+            shuliang = 0
+            # 绘制炸弹
+            for bomb in bomb_list:
+                bomb.draw_before_explosion(cave_surface)
+                bomb.remaining_time -= 1 / 60
+                if bomb.remaining_time <= 0:
+                    bomb_list.remove(bomb)
+                    fire_list.append(bomb)
+                if 0 <= cave_time < 30:  # 如果大于一定时间，炸弹的范围会变大
+                    bomb.range = 1
+                    bomb_range = 1
+                elif 30 <= cave_time < 60:
+                    bomb.range = 2
+                    bomb_range = 2
+                elif 60 <= cave_time < 120:
+                    bomb.range = 3
+                    bomb_range = 3
+                else:
+                    bomb.range = 4
+                    bomb_range = 4
+
 
             # 每隔一定时间来进行判断敌人移动
             for enemy in cave_enemy_list:
-                if enemy.time >= 0.5:  # 判断经过了多少时间，来看是否需要进行计算。
+                shuliang +=1
+                # print("enemy: "+str(shuliang)+str("  ")+str(enemy.state))
+                if enemy.time >= 0.4:  # 判断经过了多少时间，来看是否需要进行计算。
                     enemy.time = 0
                     cave_map = np.copy(enemy.cave)
-                    cave_map[cave_map == 1] = 10000000  # 设置非常大的数值来作为障碍物，a*算法就不会走这条路
-                    cave_map[cave_map == 2] = 10
-                    cave_map[cave_map == 0] = 1
+
+                    # 炸弹的位置
+                    for bomb_pos in bomb_list:
+                        # print("炸弹位置：",(bomb_pos.position[0]/bomb_pos.cell_size, bomb_pos.position[1]/bomb_pos.cell_size))
+                        cave_map[int(bomb_pos.position[0]/bomb_pos.cell_size)][int(bomb_pos.position[1]/bomb_pos.cell_size)] = 100
+
+
+                    cave_map[cave_map == 1] = 10000000  # 设置非常大的数值来作为墙壁，a*算法就不会走这条路
+                    cave_map[cave_map == 2] = 10  # 障碍物
+                    cave_map[cave_map == 0] = 1  # 路
                     start_pos = Astar.Node(enemy.position[0], enemy.position[1])  # 敌人所在位置
                     end_pos = Astar.Node(cave_player.position[0], cave_player.position[1])  # 玩家所在位置
                     distance = Astar.heuristic(start_pos, end_pos)
 
-                    if distance > 10:
+                    if distance > 0:
                         enemy_player_path = Astar.a_star_search(cave_map, start_pos, end_pos)
-                        next_action = []
 
                         if enemy.state == 0:
-                            if enemy.cave[enemy_player_path[1][0]][enemy_player_path[1][1]] != 2:  # 如果下一步不是障碍物
+                            if cave_map[enemy_player_path[1][0]][enemy_player_path[1][1]] != 10 and distance >=3:  # 如果下一步不是障碍物
                                 # next_action = enemy_player_path[1]
                                 enemy_rest = cave_enemy_list.copy()
                                 enemy_rest.remove(enemy)
                                 has_enemy = False
                                 has_bomb = False
-
                                 for x in enemy_rest:
                                     if [enemy_player_path[1][0], enemy_player_path[1][1]] == x.position:
                                         has_enemy = True
                                 for y in bomb_list:
                                     if [enemy_player_path[1][0], enemy_player_path[1][1]] == [y.position[0]/y.cell_size,y.position[1]/y.cell_size]:
                                         has_bomb = True
-
                                 if has_enemy!=True and has_bomb!=True:
+                                    enemy.next_position = [enemy_player_path[1][0], enemy_player_path[1][1]]
                                     enemy.position = [enemy_player_path[1][0], enemy_player_path[1][1]]
                                 elif has_bomb == True:
                                     enemy.state = 2
-                            else:
+                                elif has_enemy:
+                                    enemy.state = 0
+
+                            elif cave_map[enemy_player_path[1][0]][enemy_player_path[1][1]] == 10 or ((cave_player.position[1] -enemy.position[1] == 0 or cave_player.position[0] - enemy.position[0] == 0) and distance < 5):
                                 enemy_bomb_position = enemy.position.copy()
                                 enemy_bomb_position = (enemy_bomb_position[0] * cell_size, enemy_bomb_position[1] * cell_size)
                                 bomb_list.append(Map_Cave.Bomb(enemy_bomb_position, enemy, cell_size))
                                 enemy.last_bomb = bomb_list[-1]
 
                                 enemy.state = 10
-                        elif enemy.state == 10:
-                            l = bomb_list[0].range+1
-                            cx = enemy.position[0]
-                            cy = enemy.position[1]
+                        elif enemy.state == 10 or enemy.state == 2:
+                            l = bomb_range+1
+                            cx = []
+                            cy = []
+                            if enemy.state == 10:
+                                cx = enemy.position[0]
+                                cy = enemy.position[1]
+                            elif enemy.state == 2:
+                                cx = enemy_player_path[1][0]
+                                cy = enemy_player_path[1][1]
                             # 计算正方形所有坐标
-
-
                             square_coords = [(x, y) for x in range(cx - l, cx + l + 1) for y in
                                              range(cy - l, cy + l + 1)]
 
@@ -606,8 +593,8 @@ def main():
 
                             # 长条
                             tem_list = []
-                            large_cross_coords = [(cx, y) for y in range(cy - 10, cy + 10 + 1)] + [(x, cy) for x in
-                                                                                           range(cx - 10, cx + 10 + 1)]
+                            large_cross_coords = [(cx, y) for y in range(cy - 11, cy + 11 + 1)] + [(x, cy) for x in
+                                                                                           range(cx - 11, cx + 11 + 1)]
                             minus_list = list(set(large_cross_coords) - set(cross_coords))
 
                             all_list = exclusive_square_coords + minus_list
@@ -628,11 +615,11 @@ def main():
                             #     if enemy.cave[coord[0]][coord[1]] != 1 and enemy.cave[coord[0]][coord[1]] != 2:
                             #         tem_list.append(coord)
                             # i = 0
-                            # final_path = [1]*1000
+                            final_path = []
                             now_pos = Astar.Node(enemy.position[0], enemy.position[1])
-                            goal_pos = Astar.Node(tem_list[0][0], tem_list[0][1])
-                            goal_path = Astar.a_star_search(cave_map, now_pos, goal_pos)
-                            final_path = goal_path
+                            # goal_pos = Astar.Node(tem_list[0][0], tem_list[0][1])
+                            # goal_path = Astar.a_star_search(cave_map, now_pos, goal_pos)
+                            # final_path = goal_path
 
                             # i = 0  # 防止越界
                             for coord in tem_list:
@@ -640,42 +627,46 @@ def main():
                                 # now_pos = Astar.Node(enemy.position[0], enemy.position[1])
                                 goal_pos = Astar.Node(coord[0], coord[1])
                                 goal_path = Astar.a_star_search(cave_map, now_pos, goal_pos)
-
+                                goal_path.pop(0)
                                 if i == 0:
                                     for check_path in goal_path:
-                                        # print("hedui", check_path)
-                                        if enemy.cave[check_path[0]][check_path[1]] == 2 or enemy.cave[check_path[0]][check_path[1]] == 1:
+                                        # print("路是什么", cave_map[check_path[0]][check_path[1]])
+                                        if cave_map[check_path[0]][check_path[1]] == 10 or cave_map[check_path[0]][check_path[1]] == 10000000 or cave_map[check_path[0]][check_path[1]] == 100:
                                             i = 1
 
-                                if len(goal_path) <= len(final_path) and i !=1:
-                                    final_path = goal_path
-                                    i = 0
-                            # print(final_path)
-                            final_path.pop(0)
-                            enemy.next_position = final_path
-                            next_is_bomb = False
-                            for all_bomb in bomb_list:
-                                if [enemy.next_position[0][0], enemy.next_position[0][1]] == [all_bomb.position[0]/all_bomb.cell_size, all_bomb.position[1]/all_bomb.cell_size]:
-                                    next_is_bomb = True
+                                if i != 1:
+                                    if len(final_path) == 0:
+                                        final_path = goal_path
+                                        i = 0
+                                    elif len(final_path) != 0:
+                                        if len(goal_path) <= len(final_path):
+                                            final_path = goal_path
+                                            i = 0
 
-                            if not next_is_bomb:
+                            if len(final_path) != 0:
+                                enemy.next_position = final_path
+                                # next_is_bomb = False
+                                # for all_bomb in bomb_list:
+                                #
+                                #     if [enemy.next_position[0][0], enemy.next_position[0][1]] == [int(all_bomb.position[0]/all_bomb.cell_size),int(all_bomb.position[1]/all_bomb.cell_size)]:
+                                #         next_is_bomb = True
+                                #
+                                # if not next_is_bomb:
                                 enemy.position = [enemy.next_position[0][0], enemy.next_position[0][1]]
                                 enemy.next_position.pop(0)
                                 # print(enemy.next_position)
                                 enemy.state = 11
+                            else:
+                                enemy.next_position = []
                         elif enemy.state == 11:
+                            # print(enemy.next_position)
                             if len(enemy.next_position) != 0:
                                 enemy.position = [enemy.next_position[0][0], enemy.next_position[0][1]]
                                 enemy.next_position.pop(0)
                             else:
+
                                 if enemy.last_bomb.remaining_time + enemy.last_bomb.flame_time<=0:
-                                    enemy.state =0
-
-
-
-
-
-
+                                    enemy.state = 0
                 enemy.time += 1 / 60
 
             # 绘制敌人
@@ -685,23 +676,6 @@ def main():
                     enemy.invincible_after_injured -= 1 / 60
                 if enemy.hp <=0:
                     cave_enemy_list.remove(enemy)
-
-            # 绘制炸弹
-            for bomb in bomb_list:
-                bomb.draw_before_explosion(cave_surface)
-                bomb.remaining_time -= 1/60
-                if bomb.remaining_time <= 0:
-                    bomb_list.remove(bomb)
-                    fire_list.append(bomb)
-                if 0 <= cave_time < 30:  # 如果大于一定时间，炸弹的范围会变大
-                    bomb.range = 1
-                elif 30 <= cave_time < 60:
-                    bomb.range = 2
-                elif 60 <= cave_time < 120:
-                    bomb.range = 3
-                else:
-                    bomb.range = 5
-
 
             # print(cave_time)
             # 绘制爆炸效果
@@ -734,6 +708,30 @@ def main():
 
             cave_time += 1/60
             cave_player.update_map(thecave.matrix)  #更新玩家地图
+
+            #  展示玩家血条
+            max_health = 100
+            # 血条位置和尺寸
+            bar_width = 200
+            bar_height = 20
+            bar_x = (width - bar_width) / 2  # 血条水平居中
+            bar_y = 10  # 血条距离屏幕顶部的距离
+            font = pygame.font.SysFont(None, 30)
+            # 绘制血条背景
+            pygame.draw.rect(cave_surface, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height))
+
+            # 计算当前血量的宽度比例
+            health_width = (cave_player.hp / max_health) * bar_width
+
+            # 绘制当前血量
+            pygame.draw.rect(cave_surface, (255, 0, 0), (bar_x, bar_y, health_width, bar_height))
+
+            # 显示血量文本
+            health_text = font.render(f"{cave_player.hp} / {max_health}", True, (255, 0, 0))
+            cave_surface.blit(health_text, (bar_x + (bar_width / 2) - (health_text.get_width() / 2), bar_y))
+
+
+
             screen.blit(cave_surface, (0, 0))
             clock.tick(60)
             pygame.display.flip()
@@ -787,6 +785,90 @@ def main():
             screen.blit(pause_surface, (0,0))
             clock.tick(60)
             pygame.display.update()
+
+        elif map_state == 4:
+            congratulation_surface.fill((0, 0, 0))
+            font = pygame.font.SysFont(None, 55)
+            text = font.render("Congratulation!", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(width / 2, 100))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    exit()
+
+            congratulation_surface.blit(text, text_rect)
+
+            def draw_button(text, center, mouse_pos, default_color=(0,0,0), hover_color=(255, 0, 0)):
+                text_render = font.render(text, True, (255, 255, 255))
+                text_rect = text_render.get_rect(center=center)
+                button_color = hover_color if text_rect.collidepoint(mouse_pos) else default_color
+                pygame.draw.rect(congratulation_surface, button_color, text_rect.inflate(20, 10))  # 绘制带有padding的按钮背景
+                congratulation_surface.blit(text_render, text_rect)
+                return text_rect
+
+            mouse_pos = pygame.mouse.get_pos()
+            # 绘制结束游戏按钮，并检测鼠标悬停
+            mainmenu_button_rect = draw_button('Main Menu', (width / 2, 300), mouse_pos, (0, 0, 0), (200, 0, 0))
+            quit_button_rect = draw_button('Finish', (width / 2, 350), mouse_pos, (0,0,0), (200, 0, 0))
+
+
+            if quit_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    pygame.quit()
+                    sys.exit()
+
+            if mainmenu_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    running =False
+                    pygame.time.wait(500)
+
+            screen.blit(congratulation_surface, (0, 0))
+            clock.tick(60)
+            pygame.display.update()
+
+        elif map_state == 5:
+            failed_surface.fill((0, 0, 0))
+            font = pygame.font.SysFont(None, 55)
+            text = font.render("Failed...Try again!", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(width / 2, 100))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+                    exit()
+
+            failed_surface.blit(text, text_rect)
+
+            def draw_button(text, center, mouse_pos, default_color=(0, 0, 0), hover_color=(255, 0, 0)):
+                text_render = font.render(text, True, (255, 255, 255))
+                text_rect = text_render.get_rect(center=center)
+                button_color = hover_color if text_rect.collidepoint(mouse_pos) else default_color
+                pygame.draw.rect(failed_surface, button_color, text_rect.inflate(20, 10))  # 绘制带有padding的按钮背景
+                failed_surface.blit(text_render, text_rect)
+                return text_rect
+
+            mouse_pos = pygame.mouse.get_pos()
+            # 绘制结束游戏按钮，并检测鼠标悬停
+            mainmenu_button_rect = draw_button('Main Menu', (width / 2, 300), mouse_pos, (0, 0, 0), (200, 0, 0))
+            quit_button_rect = draw_button('Finish', (width / 2, 350), mouse_pos, (0, 0, 0), (200, 0, 0))
+
+            if quit_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    pygame.quit()
+                    sys.exit()
+
+            if mainmenu_button_rect.collidepoint(mouse_pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    running = False
+                    pygame.time.wait(500)
+
+            screen.blit(failed_surface, (0, 0))
+            clock.tick(60)
+            pygame.display.update()
+
 
 
 def init():

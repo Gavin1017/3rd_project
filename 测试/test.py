@@ -103,9 +103,77 @@ import numpy as np
 
 
 import numpy as np
+#
+# b = [1,2,3,4,5,6]
+# a = b.copy()
+#
+# i=1
+# for x in a:
+#     if x == i:
+#         b.remove(x)
+#     i+=1
+#
+# print("a",b)
+#
+import pygame
+import sys
 
-# 初始化变量
-list1 = [(2,3), (3,4)]
-list2 = [(7,8), (9,10)]
-a = list1 + list2
-print(a)
+# 初始化pygame
+pygame.init()
+
+# 设置窗口
+screen_width = 600
+screen_height = 400
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("玩家血条展示")
+
+# 设置颜色
+red = (255, 0, 0)
+white = (255, 255, 255)
+
+# 玩家血量
+max_health = 100  # 玩家的最大血量
+current_health = 75  # 玩家当前血量，这个值可以根据游戏逻辑变化
+
+# 血条位置和尺寸
+bar_width = 200
+bar_height = 20
+bar_x = (screen_width - bar_width) / 2  # 血条水平居中
+bar_y = 10  # 血条距离屏幕顶部的距离
+
+# 设置字体
+font = pygame.font.SysFont(None, 30)
+
+# 游戏主循环
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    screen.fill((0, 0, 0))  # 使用黑色填充屏幕
+
+    # 绘制血条背景
+    pygame.draw.rect(screen, white, (bar_x, bar_y, bar_width, bar_height))
+
+    # 计算当前血量的宽度比例
+    health_width = (current_health / max_health) * bar_width
+
+    # 绘制当前血量
+    pygame.draw.rect(screen, red, (bar_x, bar_y, health_width, bar_height))
+
+    # 显示血量文本
+    health_text = font.render(f"{current_health} / {max_health}", True, red)
+    screen.blit(health_text, (bar_x + (bar_width / 2) - (health_text.get_width() / 2), bar_y))
+
+    pygame.display.flip()
+
+# 退出pygame
+pygame.quit()
+sys.exit()
+
+
+
+
+
+
